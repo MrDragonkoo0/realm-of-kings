@@ -29,3 +29,29 @@ function showCapital() {
 function showKingdom() {
     location.reload();
 }
+
+function showWarehouse() {
+    document.getElementById("game").innerHTML = `
+        <h1>📦 Склад</h1>
+
+        <p>🪨 Камінь: 0</p>
+        <p>🪵 Дерево: 0</p>
+        <p>⛓️ Залізо: 0</p>
+        <p>🌾 Солома: 0</p>
+        <p>🧱 Цегла: 0</p>
+        <p>🏺 Глина: 0</p>
+        <p>🏖️ Пісок: 0</p>
+
+        <hr>
+
+        <p>🍞 Хліб: 0</p>
+        <p>🥩 М'ясо: 0</p>
+        <p>🌾 Борошно: 0</p>
+        <p>🥕 Морква: 0</p>
+        <p>🥔 Картопля: 0</p>
+        <p>💧 Вода: 0</p>
+        <p>🍎 Яблука: 0</p>
+
+        <button onclick="showKingdom()">⬅️ Назад</button>
+    `;
+}
