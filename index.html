@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,42 +9,75 @@
 </head>
 
 <body>
+
 <div id="game">
 
-    <h1>🏰 Моє Королівство 🏰</h1>
+    <h1>🏰 МОЄ КОРОЛІВСТВО 🏰</h1>
+
     <img src="castle.png" class="castle" alt="Замок">
 
-    <p>🏰 Назва королівства: Dragon Kingdom</p>
-    <p>👑 Правитель: Саша</p>
-    <p>📈 Рівень: 1</p>
+    <div class="kingdom-info">
 
-    <hr>
+        <h2>🏰 Dragon Kingdom</h2>
 
-    <p>👥 Населення: 0</p>
-    <p>🏘️ Міста: 0</p>
-    <p>🏠 Села: 0</p>
+        <p>👑 Правитель: <b>Саша</b></p>
+        <p>📈 Рівень: <b>1</b></p>
 
-    <hr>
+        <hr>
 
-    <p>💰 Казна: 0 🪙</p>
-    <p>💎 Дорогоцінні каміння: 0</p>
+        <p>👥 Населення: <b>0</b></p>
+        <p>🏘️ Міста: <b>0</b></p>
+        <p>🏠 Села: <b>0</b></p>
 
-    <hr>
+        <hr>
 
-    <p>💪 Військова сила: 0</p>
+        <p>💰 Казна: <b>0 🪙</b></p>
+        <p>💎 Дорогоцінні каміння: <b>0</b></p>
 
-    <hr>
+        <hr>
 
-    <button onclick="showCities()">🏘️ Міста</button>
-    <button>🏠 Села</button>
-    <button onclick="showArmy()">💪 Війська</button>
-    <button>💰 Казна</button>
-    <button>👥 Населення</button>
-    <button onclick="showWarehouse()">📦 Склад</button>
+        <p>💪 Військова сила: <b>0</b></p>
+
+    </div>
+
+
+    <div class="menu">
+
+        <button onclick="showCities()">
+            🏘️
+            <span>Міста</span>
+        </button>
+
+        <button>
+            🏠
+            <span>Села</span>
+        </button>
+
+        <button onclick="showArmy()">
+            ⚔️
+            <span>Війська</span>
+        </button>
+
+        <button>
+            💰
+            <span>Казна</span>
+        </button>
+
+        <button>
+            👥
+            <span>Населення</span>
+        </button>
+
+        <button onclick="showWarehouse()">
+            📦
+            <span>Склад</span>
+        </button>
+
+    </div>
 
 </div>
-    
-<script src="script.js"></script>>
+
+<script src="script.js"></script>
 
 </body>
 </html>
