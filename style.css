@@ -35,3 +35,11 @@ button {
 button:active {
     transform: scale(0.96);
 }
+
+.castle {
+    width: 90%;
+    max-width: 500px;
+    border-radius: 15px;
+    margin: 15px auto;
+    display: block;
+}
