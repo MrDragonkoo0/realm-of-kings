@@ -4,73 +4,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Realm of Kings</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div id="game">
+<div class="game">
 
-    <h1>🏰 МОЄ КОРОЛІВСТВО 🏰</h1>
+    <!-- Заголовок -->
+    <div class="title">
+        🏰 МОЄ КОРОЛІВСТВО 🏰
+    </div>
 
-    <img src="castle.png" class="castle" alt="Замок">
-
-    <div class="kingdom-info">
+    <!-- Інформація -->
+    <div class="kingdom">
 
         <h2>🏰 Dragon Kingdom</h2>
 
         <p>👑 Правитель: <b>Саша</b></p>
-        <p>📈 Рівень: <b>1</b></p>
 
-        <hr>
+        <div class="level">
+            <span>Рівень 1</span>
+            <div class="xp">
+                <div class="xp-fill"></div>
+            </div>
+            <small>0 / 100 XP</small>
+        </div>
 
-        <p>👥 Населення: <b>0</b></p>
-        <p>🏘️ Міста: <b>0</b></p>
-        <p>🏠 Села: <b>0</b></p>
+    </div>
 
-        <hr>
+    <!-- Статистика -->
+    <div class="stats">
 
-        <p>💰 Казна: <b>0 🪙</b></p>
-        <p>💎 Дорогоцінні каміння: <b>0</b></p>
+        <div class="stat">
+            <h3>👥 Населення</h3>
+            <p>0</p>
 
-        <hr>
+            <hr>
 
-        <p>💪 Військова сила: <b>0</b></p>
+            <h3>🏘️ Міста</h3>
+            <p>0</p>
+
+            <hr>
+
+            <h3>🏠 Села</h3>
+            <p>0</p>
+        </div>
+
+
+        <div class="stat">
+            <h3>💰 Казна</h3>
+            <p>0 🪙</p>
+
+            <hr>
+
+            <h3>💎 Дорогоцінні каміння</h3>
+            <p>0</p>
+        </div>
+
+
+        <div class="stat">
+            <h3>⚔️ Військова сила</h3>
+            <p>0</p>
+        </div>
 
     </div>
 
 
+    <!-- Кнопки -->
     <div class="menu">
 
-        <button onclick="showCities()">
-            🏘️
-            <span>Міста</span>
+        <button class="game-button" onclick="showCities()">
+            <img src="cities.png">
         </button>
 
-        <button>
-            🏠
-            <span>Села</span>
+        <button class="game-button" onclick="showVillages()">
+            <img src="villages.png">
         </button>
 
-        <button onclick="showArmy()">
-            ⚔️
-            <span>Війська</span>
+        <button class="game-button" onclick="showArmy()">
+            <img src="army.png">
         </button>
 
-        <button>
-            💰
-            <span>Казна</span>
+        <button class="game-button" onclick="showTreasury()">
+            <img src="treasury.png">
         </button>
 
-        <button>
-            👥
-            <span>Населення</span>
+        <button class="game-button" onclick="showPopulation()">
+            <img src="population.png">
         </button>
 
-        <button onclick="showWarehouse()">
-            📦
-            <span>Склад</span>
+        <button class="game-button" onclick="showWarehouse()">
+            <img src="warehouse.png">
         </button>
 
     </div>
