@@ -1,87 +1,178 @@
-body {
-    margin: 0;
-    padding: 15px;
-    background: #111;
-    color: white;
-    font-family: Arial, sans-serif;
-}
-
-#game {
-    max-width: 600px;
-    margin: auto;
-}
-
-h1 {
-    text-align: center;
-    color: #f0c75e;
-    font-size: 30px;
-    margin-bottom: 20px;
-}
-
-.castle {
-    width: 100%;
-    border-radius: 18px;
-    display: block;
-    margin-bottom: 18px;
-}
-
-.kingdom-info {
-    background: #202020;
-    border: 1px solid #555;
-    border-radius: 18px;
-    padding: 18px;
+* {
     box-sizing: border-box;
 }
 
-.kingdom-info h2 {
-    color: #f0c75e;
+body {
+    margin: 0;
+    background: #08090c;
+    color: white;
+    font-family: Georgia, serif;
+}
+
+.game {
+    width: 100%;
+    max-width: 900px;
+    margin: auto;
+    padding: 15px;
+}
+
+/* Заголовок */
+
+.title {
     text-align: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: #f3cf75;
+
+    padding: 18px;
+    margin-bottom: 15px;
+
+    border: 2px solid #b58a35;
+    border-radius: 15px;
+
+    background: linear-gradient(
+        90deg,
+        #101b2b,
+        #18273c,
+        #101b2b
+    );
+}
+
+/* Королівство */
+
+.kingdom {
+    padding: 20px;
+
+    border: 2px solid #8d6b32;
+    border-radius: 18px;
+
+    background: #15171b;
+
+    text-align: center;
+}
+
+.kingdom h2 {
+    color: #f1cc6b;
     margin-top: 0;
 }
 
-.kingdom-info p {
-    font-size: 17px;
-    margin: 12px 0;
+.kingdom p {
+    font-size: 20px;
 }
 
-.kingdom-info b {
-    color: #f0c75e;
+/* XP */
+
+.level {
+    margin-top: 20px;
+    font-size: 19px;
 }
 
-hr {
+.xp {
+    height: 18px;
+    margin: 10px auto;
+    max-width: 400px;
+
+    border: 2px solid #b28a39;
+    border-radius: 10px;
+
+    background: #080b10;
+    overflow: hidden;
+}
+
+.xp-fill {
+    width: 0%;
+    height: 100%;
+    background: #e5bd4d;
+}
+
+/* Статистика */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+
+    margin-top: 15px;
+}
+
+.stat {
+    padding: 15px;
+
+    border: 2px solid #735727;
+    border-radius: 15px;
+
+    background: #15171b;
+    text-align: center;
+}
+
+.stat h3 {
+    color: #f0ce78;
+    font-size: 18px;
+}
+
+.stat p {
+    font-size: 25px;
+    margin: 8px;
+    color: white;
+}
+
+.stat hr {
     border: 0;
-    border-top: 1px solid #555;
-    margin: 16px 0;
+    border-top: 1px solid #55462b;
 }
+
+
+/* Кнопки-картинки */
 
 .menu {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 14px;
+
     margin-top: 18px;
 }
 
-.menu button {
-    min-height: 90px;
-    border: 1px solid #555;
-    border-radius: 18px;
-    background: #292929;
-    color: white;
-    font-size: 18px;
+.game-button {
+    padding: 0;
+    border: none;
+    background: none;
     cursor: pointer;
-    transition: 0.15s;
+
+    border-radius: 15px;
+    overflow: hidden;
+
+    transition: transform 0.15s;
 }
 
-.menu button:first-line {
-    font-size: 30px;
-}
-
-.menu button span {
+.game-button img {
     display: block;
-    margin-top: 8px;
+    width: 100%;
+    height: auto;
 }
 
-.menu button:active {
-    transform: scale(0.96);
-    background: #383838;
+.game-button:active {
+    transform: scale(0.97);
+}
+
+
+/* Телефон */
+
+@media (max-width: 600px) {
+
+    .game {
+        padding: 8px;
+    }
+
+    .title {
+        font-size: 23px;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .menu {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
 }
