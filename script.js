@@ -55,3 +55,21 @@ function showWarehouse() {
         <button onclick="showKingdom()">⬅️ Назад</button>
     `;
 }
+
+function showArmy() {
+    document.getElementById("game").innerHTML = `
+        <h1>⚔️ Армія</h1>
+
+        <p>🗡️ Мечники: 0</p>
+        <p>🏹 Лучники: 0</p>
+        <p>🛡️ Щитоносці: 0</p>
+        <p>🐎 Легка кіннота: 0</p>
+        <p>🛡️ Лицарі: 0</p>
+
+        <hr>
+
+        <p>💪 Військова сила: 0</p>
+
+        <button onclick="showKingdom()">⬅️ Назад</button>
+    `;
+}
