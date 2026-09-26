@@ -144,7 +144,7 @@ function showConstruction() {
         <h1>🔨 Будівництво</h1>
 
         <div class="menu">
-            <button>🏠 Будинки</button>
+            <button onclick="showHouse()">🏠 Будинки</button>
             <button>⚒️ Кузня</button>
 
             <button>🌾 Ферма</button>
@@ -162,4 +162,30 @@ function showConstruction() {
             <button onclick="showCapital()">⬅️ НАЗАД</button>
         </div>
     `;
+}
+function showHouse() {
+    document.getElementById("game").innerHTML = `
+        <h1>🏠 Будинок</h1>
+
+        <p>📈 Рівень: I</p>
+
+        <hr>
+
+        <p>🪵 Дерево: 15</p>
+        <p>🪨 Камінь: 10</p>
+        <p>🧱 Цегла: 10</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 5 хв</p>
+
+        <div class="menu">
+            <button onclick="buildHouse()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+
+function buildHouse() {
+    alert("🏠 Будівництво будинку розпочато!");
 }
