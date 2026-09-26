@@ -22,14 +22,12 @@ function createKingdom() {
         return;
     }
 
-    document.getElementById("registration").style.display = "none";
-    document.getElementById("game").style.display = "block";
+    // Зберігаємо дані
+    localStorage.setItem("registered", "true");
+    localStorage.setItem("kingdomName", kingdom);
+    localStorage.setItem("rulerName", ruler);
 
-    document.querySelector(".kingdom h2").textContent =
-        "🏰 " + kingdom;
-
-    document.querySelector(".kingdom p").textContent =
-        "👑 " + ruler;
+    openGame(kingdom, ruler);
 }
 
 function showCities() {
