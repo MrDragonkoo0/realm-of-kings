@@ -11,7 +11,46 @@
 </head>
 
 <body>
+    
+<div id="registration">
 
+    <h1>🏰 REALM OF KINGS</h1>
+
+    <p>Ласкаво просимо у світ середньовічних королівств!</p>
+
+    <div id="step1">
+
+        <h2>🏰 Створи своє королівство</h2>
+
+        <input
+            type="text"
+            id="kingdomName"
+            placeholder="Назва королівства"
+        >
+
+        <button onclick="nextStep()">Далі ➡️</button>
+
+    </div>
+
+
+    <div id="step2" style="display:none;">
+
+        <h2>👑 Хто буде правителем?</h2>
+
+        <input
+            type="text"
+            id="rulerName"
+            placeholder="Ім'я правителя"
+        >
+
+        <button onclick="createKingdom()">
+            👑 Створити королівство
+        </button>
+
+    </div>
+
+</div>
+    
 <div id="game">
 
     <h1>🏰 МОЄ КОРОЛІВСТВО 🏰</h1>
