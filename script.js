@@ -1,3 +1,37 @@
+function nextStep() {
+
+    const kingdom = document.getElementById("kingdomName").value.trim();
+
+    if (kingdom === "") {
+        alert("Введи назву королівства!");
+        return;
+    }
+
+    document.getElementById("step1").style.display = "none";
+    document.getElementById("step2").style.display = "block";
+}
+
+
+function createKingdom() {
+
+    const kingdom = document.getElementById("kingdomName").value.trim();
+    const ruler = document.getElementById("rulerName").value.trim();
+
+    if (ruler === "") {
+        alert("Введи ім'я правителя!");
+        return;
+    }
+
+    document.getElementById("registration").style.display = "none";
+    document.getElementById("game").style.display = "block";
+
+    document.querySelector(".kingdom h2").textContent =
+        "🏰 " + kingdom;
+
+    document.querySelector(".kingdom p").textContent =
+        "👑 " + ruler;
+}
+
 function showCities() {
     document.getElementById("game").innerHTML = `
         <h1>🏘️ Міста</h1>
