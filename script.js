@@ -54,7 +54,10 @@ function showCapital() {
         <p>🏰 Стіни I рівень</p>
         <p>🚪 Ворота I рівень</p>
 
-        <button onclick="showCities()">⬅️ Назад</button>
+        <div class="menu">
+            <button onclick="showConstruction()">🔨 БУДІВНИЦТВО</button>
+            <button onclick="showCities()">⬅️ НАЗАД</button>
+        </div>
     `;
 }
 
@@ -136,4 +139,27 @@ window.addEventListener("load", function () {
         document.getElementById("game").style.display = "none";
     }
 });
+function showConstruction() {
+    document.getElementById("game").innerHTML = `
+        <h1>🔨 Будівництво</h1>
 
+        <div class="menu">
+            <button>🏠 Будинки</button>
+            <button>⚒️ Кузня</button>
+
+            <button>🌾 Ферма</button>
+            <button>🐴 Конюшня</button>
+
+            <button>🛡️ Казарми</button>
+            <button>🏹 Стрільбище</button>
+
+            <button>⛪ Храм</button>
+            <button>🍞 Пекарня</button>
+
+            <button>🧵 Майстерня</button>
+            <button>🏥 Лікарня</button>
+
+            <button onclick="showCapital()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
