@@ -105,3 +105,35 @@ function showArmy() {
         <button onclick="showKingdom()">⬅️ Назад</button>
     `;
 }
+function openGame(kingdom, ruler) {
+
+    document.getElementById("registration").style.display = "none";
+    document.getElementById("game").style.display = "block";
+
+    document.querySelector(".kingdom h2").textContent =
+        "🏰 " + kingdom;
+
+    document.querySelector(".kingdom p").textContent =
+        "👑 " + ruler;
+}
+
+
+// Перевіряємо, чи гравець уже реєструвався
+window.addEventListener("load", function () {
+
+    const registered = localStorage.getItem("registered");
+
+    if (registered === "true") {
+
+        const kingdom = localStorage.getItem("kingdomName");
+        const ruler = localStorage.getItem("rulerName");
+
+        openGame(kingdom, ruler);
+
+    } else {
+
+        document.getElementById("registration").style.display = "block";
+        document.getElementById("game").style.display = "none";
+    }
+});
+
