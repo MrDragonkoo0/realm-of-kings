@@ -12,94 +12,49 @@
 
 <body>
 
-<div class="game">
+<div id="game">
 
-    <!-- Заголовок -->
-    <div class="title">
-        🏰 МОЄ КОРОЛІВСТВО 🏰
-    </div>
+    <h1>🏰 МОЄ КОРОЛІВСТВО 🏰</h1>
 
-    <!-- Інформація -->
     <div class="kingdom">
-
         <h2>🏰 Dragon Kingdom</h2>
 
-        <p>👑 Правитель: <b>Саша</b></p>
+        <p>👑 Саша</p>
 
         <div class="level">
-            <span>Рівень 1</span>
-            <div class="xp">
-                <div class="xp-fill"></div>
-            </div>
-            <small>0 / 100 XP</small>
+            <span>📈 Рівень 1</span>
+            <span>0 / 100 XP</span>
         </div>
 
+        <div class="xp">
+            <div class="xp-fill"></div>
+        </div>
     </div>
 
-    <!-- Статистика -->
+
     <div class="stats">
 
-        <div class="stat">
-            <h3>👥 Населення</h3>
-            <p>0</p>
+        <div>👥<br><b>0</b></div>
+        <div>💰<br><b>0</b></div>
+        <div>⚔️<br><b>0</b></div>
 
-            <hr>
-
-            <h3>🏘️ Міста</h3>
-            <p>0</p>
-
-            <hr>
-
-            <h3>🏠 Села</h3>
-            <p>0</p>
-        </div>
-
-
-        <div class="stat">
-            <h3>💰 Казна</h3>
-            <p>0 🪙</p>
-
-            <hr>
-
-            <h3>💎 Дорогоцінні каміння</h3>
-            <p>0</p>
-        </div>
-
-
-        <div class="stat">
-            <h3>⚔️ Військова сила</h3>
-            <p>0</p>
-        </div>
+        <div>🏘️<br><b>0</b></div>
+        <div>🏠<br><b>0</b></div>
+        <div>💎<br><b>0</b></div>
 
     </div>
 
 
-    <!-- Кнопки -->
     <div class="menu">
 
-        <button class="game-button" onclick="showCities()">
-            <img src="cities.png">
-        </button>
+        <button onclick="showCities()">🏘️ МІСТА</button>
+        <button onclick="showVillages()">🏠 СЕЛА</button>
 
-        <button class="game-button" onclick="showVillages()">
-            <img src="villages.png">
-        </button>
+        <button onclick="showArmy()">⚔️ ВІЙСЬКА</button>
+        <button onclick="showTreasury()">💰 КАЗНА</button>
 
-        <button class="game-button" onclick="showArmy()">
-            <img src="army.png">
-        </button>
-
-        <button class="game-button" onclick="showTreasury()">
-            <img src="treasury.png">
-        </button>
-
-        <button class="game-button" onclick="showPopulation()">
-            <img src="population.png">
-        </button>
-
-        <button class="game-button" onclick="showWarehouse()">
-            <img src="warehouse.png">
-        </button>
+        <button onclick="showPopulation()">👥 ЛЮДИ</button>
+        <button onclick="showWarehouse()">📦 СКЛАД</button>
 
     </div>
 
