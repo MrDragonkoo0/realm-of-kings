@@ -1,3 +1,56 @@
+#game {
+    display: none;
+}
+
+#registration {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 25px;
+    text-align: center;
+
+    background: #171a20;
+    border: 2px solid #8d6b32;
+    border-radius: 18px;
+}
+
+#registration h1 {
+    color: #e8bd55;
+}
+
+#registration h2 {
+    color: #e8bd55;
+}
+
+#registration input {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+
+    box-sizing: border-box;
+
+    background: #0d1015;
+    color: white;
+
+    border: 1px solid #80632d;
+    border-radius: 10px;
+
+    font-size: 16px;
+}
+
+#registration button {
+    width: 100%;
+    padding: 13px;
+
+    background: #222832;
+    color: #e8bd55;
+
+    border: 1px solid #80632d;
+    border-radius: 10px;
+
+    font-size: 16px;
+    font-weight: bold;
+}
+
 * {
     box-sizing: border-box;
 }
