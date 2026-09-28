@@ -149,18 +149,17 @@ function showConstruction() {
         <h1>🔨 Будівництво</h1>
 
         <div class="menu">
-            <button onclick="showHouse()">🏠 Будинки</button>
-            <button>⚒️ Кузня</button>
+            <button onclick="startHouseBuild()">
+                🏠 Будинки <span id="houseTimer"></span>
+            </button>
 
+            <button>⚒️ Кузня</button>
             <button>🌾 Ферма</button>
             <button>🐴 Конюшня</button>
-
             <button>🛡️ Казарми</button>
             <button>🏹 Стрільбище</button>
-
             <button>⛪ Храм</button>
             <button>🍞 Пекарня</button>
-
             <button>🧵 Майстерня</button>
             <button>🏥 Лікарня</button>
 
@@ -168,69 +167,54 @@ function showConstruction() {
         </div>
     `;
 }
-function showHouse() {
-    document.getElementById("game").innerHTML = `
-        <h1>🏠 Будинок</h1>
+let houseBuilding = false;
+let houseTime = 300;
+let houseTimerInterval;
 
-        <p>🪵 Дерево: 15</p>
-        <p>🪨 Камінь: 10</p>
-        <p>🧱 Цегла: 10</p>
+function startHouseBuild() {
 
-        <hr>
-
-        <p>⏱️ Час будівництва: 5 хв</p>
-
-        <div class="menu">
-            <button onclick="buildHouse()">🔨 ПОБУДУВАТИ</button>
-            <button onclick="showConstruction()">⬅️ НАЗАД</button>
-        </div>
-    `;
-}
-function buildHouse() {
-
-    if (building) {
+    if (houseBuilding) {
         return;
     }
 
-    building = true;
+    houseBuilding = true;
+    houseTime = 300;
 
-    let timeLeft = 5;
+    updateHouseTimer();
 
-    document.getElementById("game").innerHTML = `
-        <h1>🏠 Будинок</h1>
+    houseTimerInterval = setInterval(function () {
 
-        <p>🔨 Будівництво</p>
+        houseTime--;
 
-        <h2 id="timer">00:05</h2>
+        updateHouseTimer();
 
-        <p>⏳ Залишилось</p>
-    `;
+        if (houseTime <= 0) {
 
-    const timer = setInterval(function () {
+            clearInterval(houseTimerInterval);
 
-        timeLeft--;
+            houseBuilding = false;
 
-        let minutes = Math.floor(timeLeft / 60);
-        let seconds = timeLeft % 60;
-
-        document.getElementById("timer").textContent =
-            String(minutes).padStart(2, "0") +
-            ":" +
-            String(seconds).padStart(2, "0");
-
-        if (timeLeft <= 0) {
-
-            clearInterval(timer);
-
-            houses++;
-            building = false;
-
-            document.getElementById("game").innerHTML = `
-                <h1>🏠 Будинок</h1>
-
-                <h2>✅ Будинок побудовано!</h2>
-            `;
+            document.getElementById("houseTimer").textContent =
+                " ✅ Готово";
         }
 
     }, 1000);
+}
+
+function updateHouseTimer() {
+
+    const timer = document.getElementById("houseTimer");
+
+    if (!timer) {
+        return;
+    }
+
+    const minutes = Math.floor(houseTime / 60);
+    const seconds = houseTime % 60;
+
+    timer.textContent =
+        " ⏱️ " +
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0");
 }
