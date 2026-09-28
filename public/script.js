@@ -102,10 +102,9 @@ function showConstruction(){
 function showBuilding(id){
  const b=buildings[id];
  const resources=state.resources;
- const costText=b.labels.map((label,i)=>{
-   const keys=Object.keys(b.cost);
-   const key=keys[i];
-   return `<p>${label} — є: ${resources[key] ?? 0}</p>`;
+ const keys=Object.keys(b.cost);
+ const costText=keys.map((key,i)=>{
+   return `<p>${b.labels[i]} — є: ${resources[key] ?? 0}</p>`;
  }).join('');
  const busy=!!state.building;
  document.getElementById('game').innerHTML=`
