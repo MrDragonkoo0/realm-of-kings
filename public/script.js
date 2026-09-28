@@ -22,7 +22,7 @@ async function boot(){
         return;
     }
     try {
-        state = await api('/api/me');
+        state = await api('/api/state');
         if (state.registered) showKingdom();
         else showRegistration();
     } catch(e) {
@@ -117,7 +117,7 @@ function formatTime(sec){sec=Math.max(0,Math.floor(sec));const m=Math.floor(sec/
 
 async function refresh(){
  try{
-   state=await api('/api/me');
+   state=await api('/api/state');
    const active=document.querySelector('#game h1')?.textContent;
    if(active==='🔨 Будівництво') showConstruction();
    else if(active==='🏰 МОЄ КОРОЛІВСТВО 🏰') showKingdom();
