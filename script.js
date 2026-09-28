@@ -1,4 +1,7 @@
 let houses = 0;
+let building = false;
+
+
 function nextStep() {
 
     const kingdom = document.getElementById("kingdomName").value.trim();
@@ -185,16 +188,22 @@ function showHouse() {
 }
 function buildHouse() {
 
+    if (building) {
+        return;
+    }
+
+    building = true;
+
     let timeLeft = 5;
 
     document.getElementById("game").innerHTML = `
         <h1>🏠 Будинок</h1>
 
-        <p>🔨 Будівництво розпочато!</p>
+        <p>🔨 Будівництво</p>
 
         <h2 id="timer">00:05</h2>
 
-        <p>⏳ Залишилось часу</p>
+        <p>⏳ Залишилось</p>
     `;
 
     const timer = setInterval(function () {
@@ -214,15 +223,12 @@ function buildHouse() {
             clearInterval(timer);
 
             houses++;
+            building = false;
 
             document.getElementById("game").innerHTML = `
                 <h1>🏠 Будинок</h1>
 
                 <h2>✅ Будинок побудовано!</h2>
-
-                <button onclick="showCapital()">
-                    🏰 ДО СТОЛИЦІ
-                </button>
             `;
         }
 
