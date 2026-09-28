@@ -1,8 +1,14 @@
 {
-  "name":"rok-v0.3.1",
-  "version":"0.3.1",
-  "private":true,
-  "engines":{"node":">=22.5.0"},
-  "scripts":{"start":"node server.js"},
-  "dependencies":{"express":"^4.21.2"}
+  "name": "rok-v0.4",
+  "version": "0.4.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
 }

@@ -1,20 +1,15 @@
-# ROK v0.3.1
+# Realm of Kings — ROK v0.4
 
-Realm of Kings Telegram Mini App.
+ROK v0.4 adds the first 10 core game systems:
+1. World
+2. City development
+3. Villages
+4. Agriculture
+5. Resources
+6. Economy
+7. Trade
+8. Army
+9. Defense
+10. Population
 
-## Що виправлено
-- прибрано `better-sqlite3`, через який Railway міг падати на Build;
-- використовується вбудований `node:sqlite` у Node 22.5+;
-- SQLite-файл залишається на Railway Volume через `DB_PATH=/data/rok.db`;
-- додані ресурси та їх списання при будівництві;
-- одна активна будівля одночасно;
-- завершені будівлі зберігаються в SQLite;
-- дані старих гравців зберігаються.
-
-## Railway
-Залиш:
-- `BOT_TOKEN`
-- `DB_PATH=/data/rok.db`
-- Volume mounted at `/data`
-
-Не видаляй існуючий Volume.
+The SQLite database is migrated non-destructively. Keep Railway Volume mounted at `/data`, `DB_PATH=/data/rok.db`, and `BOT_TOKEN` unchanged.

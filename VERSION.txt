@@ -1,4 +1,3 @@
-Realm of Kings (ROK)
-Version: 0.3.1
-Storage: SQLite + Railway Volume
-Fix: Node built-in SQLite, no native SQLite npm dependency
+ROK v0.4
+Розвиток світу: карта, міста, села, сільське господарство, ресурси, економіка, торгівля, війська, оборона, населення.
+DB migration: existing players and Railway Volume are preserved.
