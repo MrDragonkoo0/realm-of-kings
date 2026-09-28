@@ -46,24 +46,48 @@ db.exec(`CREATE TABLE IF NOT EXISTS players (
  created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
 );`);
 
-const columns = [
- ['gold','INTEGER NOT NULL DEFAULT 100'],['cities','INTEGER NOT NULL DEFAULT 1'],
- ['wheat','INTEGER NOT NULL DEFAULT 0'],['townhall_level','INTEGER NOT NULL DEFAULT 1'],
- ['warehouse_level','INTEGER NOT NULL DEFAULT 1'],['market_level','INTEGER NOT NULL DEFAULT 1'],
- ['walls_level','INTEGER NOT NULL DEFAULT 1'],['gate_level','INTEGER NOT NULL DEFAULT 1'],
- ['field_count','INTEGER NOT NULL DEFAULT 0'],['last_tax_at','INTEGER NOT NULL DEFAULT 0'],
- ['last_gather_at','INTEGER NOT NULL DEFAULT 0']
-];
-for (const [name,def] of columns) { try { db.exec(`ALTER TABLE players ADD COLUMN ${name} ${def}`); } catch (_) {} }
-
-const V05_COLUMNS = [
+// Non-destructive schema migration. Older ROK databases may be missing
+// columns that newer server code expects (for example `smithy`).
+// Add every known player column that is absent, without deleting existing data.
+const ALL_PLAYER_COLUMNS = [
+ ['kingdom_name','TEXT'],['ruler_name','TEXT'],
+ ['level','INTEGER NOT NULL DEFAULT 1'],['xp','INTEGER NOT NULL DEFAULT 0'],
+ ['population','INTEGER NOT NULL DEFAULT 0'],['gold','INTEGER NOT NULL DEFAULT 100'],
+ ['gems','INTEGER NOT NULL DEFAULT 0'],['cities','INTEGER NOT NULL DEFAULT 1'],
+ ['villages','INTEGER NOT NULL DEFAULT 0'],['houses','INTEGER NOT NULL DEFAULT 0'],
+ ['smithy','INTEGER NOT NULL DEFAULT 0'],['farm','INTEGER NOT NULL DEFAULT 0'],
+ ['stable','INTEGER NOT NULL DEFAULT 0'],['barracks','INTEGER NOT NULL DEFAULT 0'],
+ ['range','INTEGER NOT NULL DEFAULT 0'],['temple','INTEGER NOT NULL DEFAULT 0'],
+ ['bakery','INTEGER NOT NULL DEFAULT 0'],['workshop','INTEGER NOT NULL DEFAULT 0'],
+ ['hospital','INTEGER NOT NULL DEFAULT 0'],['military_power','INTEGER NOT NULL DEFAULT 0'],
+ ['stone','INTEGER NOT NULL DEFAULT 0'],['wood','INTEGER NOT NULL DEFAULT 0'],
+ ['iron','INTEGER NOT NULL DEFAULT 0'],['straw','INTEGER NOT NULL DEFAULT 0'],
+ ['brick','INTEGER NOT NULL DEFAULT 0'],['clay','INTEGER NOT NULL DEFAULT 0'],
+ ['sand','INTEGER NOT NULL DEFAULT 0'],['bread','INTEGER NOT NULL DEFAULT 0'],
+ ['meat','INTEGER NOT NULL DEFAULT 0'],['flour','INTEGER NOT NULL DEFAULT 0'],
+ ['carrot','INTEGER NOT NULL DEFAULT 0'],['potato','INTEGER NOT NULL DEFAULT 0'],
+ ['water','INTEGER NOT NULL DEFAULT 0'],['apples','INTEGER NOT NULL DEFAULT 0'],
+ ['wheat','INTEGER NOT NULL DEFAULT 0'],['swordsmen','INTEGER NOT NULL DEFAULT 0'],
+ ['archers','INTEGER NOT NULL DEFAULT 0'],['shieldmen','INTEGER NOT NULL DEFAULT 0'],
+ ['cavalry','INTEGER NOT NULL DEFAULT 0'],['knights','INTEGER NOT NULL DEFAULT 0'],
+ ['townhall_level','INTEGER NOT NULL DEFAULT 1'],['warehouse_level','INTEGER NOT NULL DEFAULT 1'],
+ ['market_level','INTEGER NOT NULL DEFAULT 1'],['walls_level','INTEGER NOT NULL DEFAULT 1'],
+ ['gate_level','INTEGER NOT NULL DEFAULT 1'],['field_count','INTEGER NOT NULL DEFAULT 0'],
+ ['last_tax_at','INTEGER NOT NULL DEFAULT 0'],['last_gather_at','INTEGER NOT NULL DEFAULT 0'],
+ ['building_type','TEXT'],['building_ends_at','INTEGER'],
+ ['created_at','INTEGER NOT NULL DEFAULT (strftime(\'%s\',\'now\'))'],
  ['sawmill','INTEGER NOT NULL DEFAULT 0'],['mine','INTEGER NOT NULL DEFAULT 0'],
  ['woodcutters','INTEGER NOT NULL DEFAULT 0'],['miners','INTEGER NOT NULL DEFAULT 0'],
  ['last_extraction_at','INTEGER NOT NULL DEFAULT 0']
 ];
-for (const [name,def] of V05_COLUMNS) { try { db.exec(`ALTER TABLE players ADD COLUMN ${name} ${def}`); } catch (_) {} }
+const existingColumns = new Set(db.prepare('PRAGMA table_info(players)').all().map(c => c.name));
+for (const [name,def] of ALL_PLAYER_COLUMNS) {
+  if (!existingColumns.has(name)) {
+    try { db.exec(`ALTER TABLE players ADD COLUMN ${name} ${def}`); } catch (_) {}
+  }
+}
 
-// ROK v0.5.1: every kingdom starts with one free sawmill and one free mine.
+// ROK v0.5.2: every kingdom starts with one free sawmill and one free mine.
 // Existing v0.5 players receive them too if they do not have them yet.
 db.exec('UPDATE players SET sawmill=1 WHERE sawmill=0');
 db.exec('UPDATE players SET mine=1 WHERE mine=0');

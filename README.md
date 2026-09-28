@@ -1,11 +1,9 @@
-# Realm of Kings — ROK v0.5.1
+# Realm of Kings — ROK v0.5.2
 
-ROK v0.5.1 is a small balance/fix release for the extraction system.
+Виправлення ROK v0.5.1: старі SQLite бази могли не мати колонок на кшталт `smithy`, через що сервер показував `no such column`.
 
-- Every new kingdom starts with 1 free 🪚 sawmill and 1 free ⛏️ mine.
-- Existing players from v0.5 receive a missing sawmill/mine automatically if its count is 0.
-- Wood and stone/iron extraction still requires assigning workers.
-- Manual resource gathering remains disabled.
-- Existing SQLite data and the Railway Volume are preserved.
+v0.5.2 робить повну не руйнівну міграцію відомих колонок `players`: відсутні колонки додаються автоматично, існуючі значення не видаляються.
 
-Keep Railway Volume mounted at `/data`, `DB_PATH=/data/rok.db`, and `BOT_TOKEN` unchanged.
+Також зберігається система v0.5.1: кожне нове королівство має 1 🪚 лісопилку та 1 ⛏️ шахту безкоштовно; існуючі гравці без них отримують по 1.
+
+Railway: залишити Volume `/data`, `DB_PATH=/data/rok.db` та `BOT_TOKEN` без змін. Не видаляти `rok.db`.
