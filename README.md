@@ -1,29 +1,22 @@
-# ROK v0.2
+# ROK v0.2 — SQLite
 
 Realm of Kings Telegram Mini App.
 
-## Що додано
-- Telegram ID для кожного гравця.
-- PostgreSQL база даних.
-- Реєстрація зберігається на сервері.
-- Кожен Telegram-гравець має окреме королівство.
-- Дані більше не залежать від localStorage.
-- Будівництво зберігається на сервері.
-- Одночасно будується максимум одна будівля.
-- Після повторного входу дані завантажуються з бази.
+Збереження зроблено через SQLite, як у Farm+.
 
-## Потрібні змінні Railway
-- `BOT_TOKEN` — токен бота, зберігати тільки в Railway Variables.
-- `DATABASE_URL` — URL PostgreSQL.
-- `PORT` — Railway задає його сам, можна не вказувати.
+## Railway
+1. Створити сервіс із цього GitHub репозиторію.
+2. Додати Railway Volume.
+3. Підключити Volume до `/data`.
+4. Variables:
+   - `BOT_TOKEN` = токен Telegram-бота
+   - `DB_PATH` = `/data/rok.db`
+5. Deploy.
 
-## Запуск
-```bash
-npm install
-npm run db:init
-npm start
-```
+SQLite-файл `rok.db` буде лежати на Railway Volume і не зникатиме при звичайному redeploy.
 
-Для Telegram Mini App URL треба використовувати URL сервера Railway, а не GitHub Pages.
+## Важливо
+Не записуй BOT_TOKEN у GitHub. Зберігай його тільки в Railway Variables.
 
-Не записуй BOT_TOKEN у код або GitHub.
+## Версія
+ROK v0.2

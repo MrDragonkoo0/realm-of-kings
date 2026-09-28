@@ -1,2 +1,3 @@
-ROK v0.2
-Telegram ID + PostgreSQL server save
+Realm of Kings (ROK)
+Version: 0.2
+Storage: SQLite + Railway Volume
