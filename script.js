@@ -153,9 +153,7 @@ function showConstruction() {
                 🏠 Будинки <span id="houseTimer"></span>
             </button>
 
-            <button onclick="startSmithyBuild()">
-    ⚒️ Кузня <span id="smithyTimer"></span>
-</button>
+            <<button onclick="showSmithy()">⚒️ Кузня</button>
             <button>🌾 Ферма</button>
             <button>🐴 Конюшня</button>
             <button>🛡️ Казарми</button>
@@ -166,6 +164,25 @@ function showConstruction() {
             <button>🏥 Лікарня</button>
 
             <button onclick="showCapital()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+function showSmithy() {
+    document.getElementById("game").innerHTML = `
+        <h1>⚒️ Кузня</h1>
+
+        <p>🪵 Дерево: 10</p>
+        <p>🪨 Камінь: 15</p>
+        <p>⛓️ Залізо: 5</p>
+        <p>🏺 Глина: 5</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 20 хв</p>
+
+        <div class="menu">
+            <button onclick="startSmithyBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
         </div>
     `;
 }
