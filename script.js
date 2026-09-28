@@ -145,28 +145,93 @@ window.addEventListener("load", function () {
     }
 });
 function showConstruction() {
+
     document.getElementById("game").innerHTML = `
+
         <h1>🔨 Будівництво</h1>
 
         <div class="menu">
-            <button onclick="startHouseBuild()">
-                🏠 Будинки <span id="houseTimer"></span>
+
+            <button onclick="showHouse()">
+                🏠 Будинки
+                <span id="houseTimer"></span>
             </button>
 
-            <<button onclick="showSmithy()">⚒️ Кузня</button>
-            <button>🌾 Ферма</button>
-            <button>🐴 Конюшня</button>
-            <button>🛡️ Казарми</button>
-            <button>🏹 Стрільбище</button>
-            <button>⛪ Храм</button>
-            <button>🍞 Пекарня</button>
-            <button>🧵 Майстерня</button>
-            <button>🏥 Лікарня</button>
+            <button onclick="showSmithy()">
+                ⚒️ Кузня
+                <span id="smithyTimer"></span>
+            </button>
 
-            <button onclick="showCapital()">⬅️ НАЗАД</button>
+            <button onclick="showFarm()">
+                🌾 Ферма
+                <span id="farmTimer"></span>
+            </button>
+
+            <button onclick="showStable()">
+                🐴 Конюшня
+                <span id="stableTimer"></span>
+            </button>
+
+            <button onclick="showBarracks()">
+                🛡️ Казарми
+                <span id="barracksTimer"></span>
+            </button>
+
+            <button onclick="showRange()">
+                🏹 Стрільбище
+                <span id="rangeTimer"></span>
+            </button>
+
+            <button onclick="showTemple()">
+                ⛪ Храм
+                <span id="templeTimer"></span>
+            </button>
+
+            <button onclick="showBakery()">
+                🍞 Пекарня
+                <span id="bakeryTimer"></span>
+            </button>
+
+            <button onclick="showWorkshop()">
+                🧵 Майстерня
+                <span id="workshopTimer"></span>
+            </button>
+
+            <button onclick="showHospital()">
+                🏥 Лікарня
+                <span id="hospitalTimer"></span>
+            </button>
+
+            <button onclick="showCapital()">
+                ⬅️ НАЗАД
+            </button>
+
+        </div>
+    `;
+
+    // Після створення HTML відновлюємо таймер
+    updateBuildingTimer();
+}
+function showHouse() {
+    document.getElementById("game").innerHTML = `
+        <h1>🏠 Будинки</h1>
+
+        <p>🪵 Дерево: 15</p>
+        <p>🪨 Камінь: 10</p>
+        <p>🧱 Цегла: 10</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 5 хв</p>
+
+        <div class="menu">
+            <button onclick="startHouseBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
         </div>
     `;
 }
+
+
 function showSmithy() {
     document.getElementById("game").innerHTML = `
         <h1>⚒️ Кузня</h1>
@@ -186,102 +251,243 @@ function showSmithy() {
         </div>
     `;
 }
-let houseBuilding = false;
-let houseTime = 300;
-let houseTimerInterval;
 
-function startHouseBuild() {
 
-    if (houseBuilding) {
+function showFarm() {
+    document.getElementById("game").innerHTML = `
+        <h1>🌾 Ферма</h1>
+
+        <p>🪵 Дерево: 5</p>
+        <p>🪨 Камінь: 10</p>
+        <p>🌾 Солома: 25</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 15 хв</p>
+
+        <div class="menu">
+            <button onclick="startFarmBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+
+
+function showStable() {
+    document.getElementById("game").innerHTML = `
+        <h1>🐴 Конюшня</h1>
+
+        <p>🪵 Дерево: 30</p>
+        <p>🪨 Камінь: 50</p>
+        <p>🌾 Солома: 25</p>
+        <p>⛓️ Залізо: 10</p>
+        <p>🏺 Глина: 10</p>
+        <p>🧱 Цегла: 20</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 40 хв</p>
+
+        <div class="menu">
+            <button onclick="startStableBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+
+
+function showBarracks() {
+    document.getElementById("game").innerHTML = `
+        <h1>🛡️ Казарми</h1>
+
+        <p>🪵 Дерево: 25</p>
+        <p>🪨 Камінь: 30</p>
+        <p>⛓️ Залізо: 15</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 30 хв</p>
+
+        <div class="menu">
+            <button onclick="startBarracksBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+
+
+function showRange() {
+    document.getElementById("game").innerHTML = `
+        <h1>🏹 Стрільбище</h1>
+
+        <p>🪵 Дерево: 20</p>
+        <p>🪨 Камінь: 20</p>
+        <p>⛓️ Залізо: 10</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 25 хв</p>
+
+        <div class="menu">
+            <button onclick="startRangeBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+
+
+function showTemple() {
+    document.getElementById("game").innerHTML = `
+        <h1>⛪ Храм</h1>
+
+        <p>🪵 Дерево: 20</p>
+        <p>🪨 Камінь: 35</p>
+        <p>🧱 Цегла: 20</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 35 хв</p>
+
+        <div class="menu">
+            <button onclick="startTempleBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+
+
+function showBakery() {
+    document.getElementById("game").innerHTML = `
+        <h1>🍞 Пекарня</h1>
+
+        <p>🪵 Дерево: 15</p>
+        <p>🪨 Камінь: 15</p>
+        <p>🧱 Цегла: 15</p>
+        <p>🏺 Глина: 5</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 20 хв</p>
+
+        <div class="menu">
+            <button onclick="startBakeryBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+
+
+function showWorkshop() {
+    document.getElementById("game").innerHTML = `
+        <h1>🧵 Майстерня</h1>
+
+        <p>🪵 Дерево: 20</p>
+        <p>🪨 Камінь: 15</p>
+        <p>⛓️ Залізо: 10</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 25 хв</p>
+
+        <div class="menu">
+            <button onclick="startWorkshopBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+
+
+function showHospital() {
+    document.getElementById("game").innerHTML = `
+        <h1>🏥 Лікарня</h1>
+
+        <p>🪵 Дерево: 25</p>
+        <p>🪨 Камінь: 30</p>
+        <p>🧱 Цегла: 20</p>
+
+        <hr>
+
+        <p>⏱️ Час будівництва: 40 хв</p>
+
+        <div class="menu">
+            <button onclick="startHospitalBuild()">🔨 ПОБУДУВАТИ</button>
+            <button onclick="showConstruction()">⬅️ НАЗАД</button>
+        </div>
+    `;
+}
+// ===============================
+// 🏗️ СИСТЕМА БУДІВНИЦТВА
+// ===============================
+
+let building = false;
+let currentBuilding = "";
+let buildingTime = 0;
+let buildingTimerInterval;
+
+
+// Початок будівництва
+function startBuilding(type, seconds) {
+
+    // Якщо вже щось будується
+    if (building) {
         return;
     }
 
-    houseBuilding = true;
-    houseTime = 300;
+    building = true;
+    currentBuilding = type;
+    buildingTime = seconds;
 
-    updateHouseTimer();
+    // Одразу повертаємося до списку будівництва
+    showConstruction();
 
-    houseTimerInterval = setInterval(function () {
+    updateBuildingTimer();
 
-        houseTime--;
+    buildingTimerInterval = setInterval(function () {
 
-        updateHouseTimer();
+        buildingTime--;
 
-        if (houseTime <= 0) {
+        updateBuildingTimer();
 
-            clearInterval(houseTimerInterval);
+        if (buildingTime <= 0) {
 
-            houseBuilding = false;
+            clearInterval(buildingTimerInterval);
 
-            document.getElementById("houseTimer").textContent =
-                " ✅ Готово";
+            building = false;
+
+            // Будинок додається після завершення
+            if (currentBuilding === "house") {
+                houses++;
+            }
+
+            currentBuilding = "";
+
+            showConstruction();
         }
 
     }, 1000);
 }
 
-function updateHouseTimer() {
 
-    const timer = document.getElementById("houseTimer");
+// ===============================
+// ⏱️ ОНОВЛЕННЯ ТАЙМЕРА
+// ===============================
+
+function updateBuildingTimer() {
+
+    if (!building) {
+        return;
+    }
+
+    const timer = document.getElementById(
+        currentBuilding + "Timer"
+    );
 
     if (!timer) {
         return;
     }
 
-    const minutes = Math.floor(houseTime / 60);
-    const seconds = houseTime % 60;
-
-    timer.textContent =
-        " ⏱️ " +
-        String(minutes).padStart(2, "0") +
-        ":" +
-        String(seconds).padStart(2, "0");
-}
-
-let smithyBuilding = false;
-let smithyTime = 1200;
-let smithyTimerInterval;
-
-function startSmithyBuild() {
-
-    if (houseBuilding || smithyBuilding) {
-        return;
-    }
-
-    smithyBuilding = true;
-    smithyTime = 1200;
-
-    updateSmithyTimer();
-
-    smithyTimerInterval = setInterval(function () {
-
-        smithyTime--;
-
-        updateSmithyTimer();
-
-        if (smithyTime <= 0) {
-
-            clearInterval(smithyTimerInterval);
-
-            smithyBuilding = false;
-
-            document.getElementById("smithyTimer").textContent =
-                " ✅ Готово";
-        }
-
-    }, 1000);
-}
-
-function updateSmithyTimer() {
-
-    const timer = document.getElementById("smithyTimer");
-
-    if (!timer) {
-        return;
-    }
-
-    const minutes = Math.floor(smithyTime / 60);
-    const seconds = smithyTime % 60;
+    const minutes = Math.floor(buildingTime / 60);
+    const seconds = buildingTime % 60;
 
     timer.textContent =
         " ⏱️ " +
