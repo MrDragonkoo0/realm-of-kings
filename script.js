@@ -67,7 +67,47 @@ function showCapital() {
 }
 
 function showKingdom() {
-    location.reload();
+
+    const kingdom = localStorage.getItem("kingdomName");
+    const ruler = localStorage.getItem("rulerName");
+
+    document.getElementById("game").innerHTML = `
+        <h1>🏰 МОЄ КОРОЛІВСТВО 🏰</h1>
+
+        <div class="kingdom">
+            <h2>🏰 ${kingdom}</h2>
+            <p>👑 ${ruler}</p>
+
+            <div class="level">
+                <span>📈 Рівень 1</span>
+                <span>0 / 100 XP</span>
+            </div>
+
+            <div class="xp">
+                <div class="xp-fill"></div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div>👥<br><b>0</b></div>
+            <div>💰<br><b>0</b></div>
+            <div>⚔️<br><b>0</b></div>
+            <div>🏘️<br><b>0</b></div>
+            <div>🏠<br><b>0</b></div>
+            <div>💎<br><b>0</b></div>
+        </div>
+
+        <div class="menu">
+            <button onclick="showCities()">🏘️ МІСТА</button>
+            <button onclick="showVillages()">🏠 СЕЛА</button>
+
+            <button onclick="showArmy()">⚔️ ВІЙСЬКА</button>
+            <button onclick="showTreasury()">💰 КАЗНА</button>
+
+            <button onclick="showPopulation()">👥 ЛЮДИ</button>
+            <button onclick="showWarehouse()">📦 СКЛАД</button>
+        </div>
+    `;
 }
 
 function showWarehouse() {
