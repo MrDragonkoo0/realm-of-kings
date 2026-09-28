@@ -1,0 +1,2 @@
+ROK v0.2
+Telegram ID + PostgreSQL server save

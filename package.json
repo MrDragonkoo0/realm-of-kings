@@ -1,0 +1,7 @@
+{
+  "name":"rok-v0.2",
+  "version":"0.2.0",
+  "private":true,
+  "scripts":{"start":"node server.js","db:init":"node init-db.js"},
+  "dependencies":{"express":"^4.21.2","pg":"^8.13.1"}
+}
