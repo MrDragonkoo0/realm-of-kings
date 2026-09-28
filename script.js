@@ -153,7 +153,9 @@ function showConstruction() {
                 🏠 Будинки <span id="houseTimer"></span>
             </button>
 
-            <button>⚒️ Кузня</button>
+            <button onclick="startSmithyBuild()">
+    ⚒️ Кузня <span id="smithyTimer"></span>
+</button>
             <button>🌾 Ферма</button>
             <button>🐴 Конюшня</button>
             <button>🛡️ Казарми</button>
@@ -211,6 +213,58 @@ function updateHouseTimer() {
 
     const minutes = Math.floor(houseTime / 60);
     const seconds = houseTime % 60;
+
+    timer.textContent =
+        " ⏱️ " +
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0");
+}
+
+let smithyBuilding = false;
+let smithyTime = 1200;
+let smithyTimerInterval;
+
+function startSmithyBuild() {
+
+    if (houseBuilding || smithyBuilding) {
+        return;
+    }
+
+    smithyBuilding = true;
+    smithyTime = 1200;
+
+    updateSmithyTimer();
+
+    smithyTimerInterval = setInterval(function () {
+
+        smithyTime--;
+
+        updateSmithyTimer();
+
+        if (smithyTime <= 0) {
+
+            clearInterval(smithyTimerInterval);
+
+            smithyBuilding = false;
+
+            document.getElementById("smithyTimer").textContent =
+                " ✅ Готово";
+        }
+
+    }, 1000);
+}
+
+function updateSmithyTimer() {
+
+    const timer = document.getElementById("smithyTimer");
+
+    if (!timer) {
+        return;
+    }
+
+    const minutes = Math.floor(smithyTime / 60);
+    const seconds = smithyTime % 60;
 
     timer.textContent =
         " ⏱️ " +
