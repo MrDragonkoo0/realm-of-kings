@@ -1,105 +1,32 @@
 <!DOCTYPE html>
 <html lang="uk">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Realm of Kings</title>
-
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Realm of Kings</title>
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    
+
 <div id="registration">
-
     <h1>🏰 REALM OF KINGS</h1>
-
     <p>Ласкаво просимо у світ середньовічних королівств!</p>
 
     <div id="step1">
-
         <h2>🏰 Створи своє королівство</h2>
-
-        <input
-            type="text"
-            id="kingdomName"
-            placeholder="Назва королівства"
-        >
-
+        <input type="text" id="kingdomName" placeholder="Назва королівства">
         <button onclick="nextStep()">Далі ➡️</button>
-
     </div>
-
 
     <div id="step2" style="display:none;">
-
         <h2>👑 Хто буде правителем?</h2>
-
-        <input
-            type="text"
-            id="rulerName"
-            placeholder="Ім'я правителя"
-        >
-
-        <button onclick="createKingdom()">
-            👑 Створити королівство
-        </button>
-
+        <input type="text" id="rulerName" placeholder="Ім'я правителя">
+        <button onclick="createKingdom()">👑 Створити королівство</button>
     </div>
-
 </div>
-    
-<div id="game">
 
-    <h1>🏰 МОЄ КОРОЛІВСТВО 🏰</h1>
-
-    <div class="kingdom">
-        <h2>🏰 Dragon Kingdom</h2>
-
-        <p>👑 Саша</p>
-
-        <div class="level">
-            <span>📈 Рівень 1</span>
-            <span>0 / 100 XP</span>
-        </div>
-
-        <div class="xp">
-            <div class="xp-fill"></div>
-        </div>
-    </div>
-
-
-    <div class="stats">
-
-        <div>👥<br><b>0</b></div>
-        <div>💰<br><b>0</b></div>
-        <div>⚔️<br><b>0</b></div>
-
-        <div>🏘️<br><b>0</b></div>
-        <div>🏠<br><b>0</b></div>
-        <div>💎<br><b>0</b></div>
-
-    </div>
-
-
-    <div class="menu">
-
-        <button onclick="showCities()">🏘️ МІСТА</button>
-        <button onclick="showVillages()">🏠 СЕЛА</button>
-
-        <button onclick="showArmy()">⚔️ ВІЙСЬКА</button>
-        <button onclick="showTreasury()">💰 КАЗНА</button>
-
-        <button onclick="showPopulation()">👥 ЛЮДИ</button>
-        <button onclick="showWarehouse()">📦 СКЛАД</button>
-
-    </div>
-
-</div>
+<div id="game"></div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
