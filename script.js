@@ -1,3 +1,4 @@
+let houses = 0;
 function nextStep() {
 
     const kingdom = document.getElementById("kingdomName").value.trim();
@@ -53,6 +54,7 @@ function showCapital() {
         <p>🏪 Ринок I рівень</p>
         <p>🏰 Стіни I рівень</p>
         <p>🚪 Ворота I рівень</p>
+        <p>🏠 Будинки: ${houses}</p>
 
         <div class="menu">
             <button onclick="showConstruction()">🔨 БУДІВНИЦТВО</button>
@@ -186,7 +188,6 @@ function showHouse() {
     `;
 }
 
-let houses = 0;
 
 function buildHouse() {
     alert("🏠 Будівництво будинку розпочато!");
