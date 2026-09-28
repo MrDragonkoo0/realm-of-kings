@@ -169,10 +169,6 @@ function showHouse() {
     document.getElementById("game").innerHTML = `
         <h1>🏠 Будинок</h1>
 
-        <p>📈 Рівень: I</p>
-
-        <hr>
-
         <p>🪵 Дерево: 15</p>
         <p>🪨 Камінь: 10</p>
         <p>🧱 Цегла: 10</p>
@@ -187,16 +183,48 @@ function showHouse() {
         </div>
     `;
 }
-
-
 function buildHouse() {
-    alert("🏠 Будівництво будинку розпочато!");
 
-    setTimeout(function () {
-        houses++;
+    let timeLeft = 5;
 
-        alert("✅ Будинок побудовано!");
+    document.getElementById("game").innerHTML = `
+        <h1>🏠 Будинок</h1>
 
-        showCapital();
-    }, 5000);
+        <p>🔨 Будівництво розпочато!</p>
+
+        <h2 id="timer">00:05</h2>
+
+        <p>⏳ Залишилось часу</p>
+    `;
+
+    const timer = setInterval(function () {
+
+        timeLeft--;
+
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+
+        document.getElementById("timer").textContent =
+            String(minutes).padStart(2, "0") +
+            ":" +
+            String(seconds).padStart(2, "0");
+
+        if (timeLeft <= 0) {
+
+            clearInterval(timer);
+
+            houses++;
+
+            document.getElementById("game").innerHTML = `
+                <h1>🏠 Будинок</h1>
+
+                <h2>✅ Будинок побудовано!</h2>
+
+                <button onclick="showCapital()">
+                    🏰 ДО СТОЛИЦІ
+                </button>
+            `;
+        }
+
+    }, 1000);
 }
