@@ -63,6 +63,11 @@ const V05_COLUMNS = [
 ];
 for (const [name,def] of V05_COLUMNS) { try { db.exec(`ALTER TABLE players ADD COLUMN ${name} ${def}`); } catch (_) {} }
 
+// ROK v0.5.1: every kingdom starts with one free sawmill and one free mine.
+// Existing v0.5 players receive them too if they do not have them yet.
+db.exec('UPDATE players SET sawmill=1 WHERE sawmill=0');
+db.exec('UPDATE players SET mine=1 WHERE mine=0');
+
 const BUILDINGS = {
  house:{name:'🏠 Будинки',seconds:300,column:'houses'}, smithy:{name:'⚒️ Кузня',seconds:1200,column:'smithy'},
  farm:{name:'🌾 Ферма',seconds:900,column:'farm'}, stable:{name:'🐴 Конюшня',seconds:2400,column:'stable'},
@@ -157,7 +162,7 @@ function deduct(id,cost){ const sets=[],vals=[]; for(const [k,v] of Object.entri
 
 app.get('/api/state',(req,res)=>{try{const p=currentPlayer(getUserId(req));if(!p)return res.json({registered:false});res.json(publicUser(p));}catch(e){res.status(401).json({error:e.message});}});
 app.get('/api/me',(req,res)=>{try{const p=currentPlayer(getUserId(req));res.json(p?publicUser(p):{registered:false});}catch(e){res.status(401).json({error:e.message});}});
-app.post('/api/register',(req,res)=>{try{const id=getUserId(req),kingdom=String(req.body.kingdom||'').trim(),ruler=String(req.body.ruler||'').trim();if(!kingdom||!ruler)return res.status(400).json({error:'Заповни обидва поля'});if(kingdom.length>32||ruler.length>32)return res.status(400).json({error:'Максимум 32 символи'});let p=getPlayer(id);if(!p){db.prepare('INSERT INTO players(telegram_id,kingdom_name,ruler_name,gold,cities) VALUES(?,?,?,100,1)').run(id,kingdom,ruler);p=getPlayer(id);}res.json(publicUser(p));}catch(e){res.status(400).json({error:e.message});}});
+app.post('/api/register',(req,res)=>{try{const id=getUserId(req),kingdom=String(req.body.kingdom||'').trim(),ruler=String(req.body.ruler||'').trim();if(!kingdom||!ruler)return res.status(400).json({error:'Заповни обидва поля'});if(kingdom.length>32||ruler.length>32)return res.status(400).json({error:'Максимум 32 символи'});let p=getPlayer(id);if(!p){db.prepare('INSERT INTO players(telegram_id,kingdom_name,ruler_name,gold,cities,sawmill,mine) VALUES(?,?,?,100,1,1,1)').run(id,kingdom,ruler);p=getPlayer(id);}res.json(publicUser(p));}catch(e){res.status(400).json({error:e.message});}});
 
 app.post('/api/build',(req,res)=>{try{const id=getUserId(req),type=String(req.body.type||''),p=currentPlayer(id);if(!BUILDINGS[type])return res.status(400).json({error:'Невідома будівля'});if(!p)return res.status(400).json({error:'Спочатку створи королівство'});if(p.building_type)return res.status(400).json({error:'Зараз уже будується інша будівля'});const cost=BUILDING_COSTS[type];if(!canPay(p,cost))return res.status(400).json({error:'Недостатньо ресурсів'});deduct(id,cost);db.prepare('UPDATE players SET building_type=?,building_ends_at=? WHERE telegram_id=?').run(type,Math.floor(Date.now()/1000)+BUILDINGS[type].seconds,id);res.json(publicUser(currentPlayer(id)));}catch(e){res.status(400).json({error:e.message});}});
 
@@ -191,4 +196,4 @@ app.get('/api/world',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(id)
 
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log(`ROK v0.4 SQLite server on ${PORT}`));
+app.listen(PORT,()=>console.log(`ROK v0.5.1 SQLite server on ${PORT}`));
