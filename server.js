@@ -2,18 +2,17 @@ const express = require('express');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const Database = require('better-sqlite3');
+const { DatabaseSync } = require('node:sqlite');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Railway Volume: set DB_PATH=/data/rok.db
 const dbPath = process.env.DB_PATH || path.join(__dirname, 'rok.db');
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
+const db = new DatabaseSync(dbPath);
+db.exec('PRAGMA journal_mode = WAL;');
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS players (
@@ -28,6 +27,15 @@ CREATE TABLE IF NOT EXISTS players (
   cities INTEGER NOT NULL DEFAULT 0,
   villages INTEGER NOT NULL DEFAULT 0,
   houses INTEGER NOT NULL DEFAULT 0,
+  smithy INTEGER NOT NULL DEFAULT 0,
+  farm INTEGER NOT NULL DEFAULT 0,
+  stable INTEGER NOT NULL DEFAULT 0,
+  barracks INTEGER NOT NULL DEFAULT 0,
+  range INTEGER NOT NULL DEFAULT 0,
+  temple INTEGER NOT NULL DEFAULT 0,
+  bakery INTEGER NOT NULL DEFAULT 0,
+  workshop INTEGER NOT NULL DEFAULT 0,
+  hospital INTEGER NOT NULL DEFAULT 0,
   military_power INTEGER NOT NULL DEFAULT 0,
   stone INTEGER NOT NULL DEFAULT 0,
   wood INTEGER NOT NULL DEFAULT 0,
@@ -48,15 +56,6 @@ CREATE TABLE IF NOT EXISTS players (
   shieldmen INTEGER NOT NULL DEFAULT 0,
   cavalry INTEGER NOT NULL DEFAULT 0,
   knights INTEGER NOT NULL DEFAULT 0,
-  smithy INTEGER NOT NULL DEFAULT 0,
-  farm INTEGER NOT NULL DEFAULT 0,
-  stable INTEGER NOT NULL DEFAULT 0,
-  barracks INTEGER NOT NULL DEFAULT 0,
-  range INTEGER NOT NULL DEFAULT 0,
-  temple INTEGER NOT NULL DEFAULT 0,
-  bakery INTEGER NOT NULL DEFAULT 0,
-  workshop INTEGER NOT NULL DEFAULT 0,
-  hospital INTEGER NOT NULL DEFAULT 0,
   building_type TEXT,
   building_ends_at INTEGER,
   created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
@@ -64,16 +63,16 @@ CREATE TABLE IF NOT EXISTS players (
 `);
 
 const BUILDINGS = {
-  house:{name:'🏠 Будинки',seconds:300},
-  smithy:{name:'⚒️ Кузня',seconds:1200},
-  farm:{name:'🌾 Ферма',seconds:900},
-  stable:{name:'🐴 Конюшня',seconds:2400},
-  barracks:{name:'🛡️ Казарми',seconds:1800},
-  range:{name:'🏹 Стрільбище',seconds:1500},
-  temple:{name:'⛪ Храм',seconds:2100},
-  bakery:{name:'🍞 Пекарня',seconds:1200},
-  workshop:{name:'🧵 Майстерня',seconds:1500},
-  hospital:{name:'🏥 Лікарня',seconds:2400}
+  house:{name:'🏠 Будинки',seconds:300,column:'houses'},
+  smithy:{name:'⚒️ Кузня',seconds:1200,column:'smithy'},
+  farm:{name:'🌾 Ферма',seconds:900,column:'farm'},
+  stable:{name:'🐴 Конюшня',seconds:2400,column:'stable'},
+  barracks:{name:'🛡️ Казарми',seconds:1800,column:'barracks'},
+  range:{name:'🏹 Стрільбище',seconds:1500,column:'range'},
+  temple:{name:'⛪ Храм',seconds:2100,column:'temple'},
+  bakery:{name:'🍞 Пекарня',seconds:1200,column:'bakery'},
+  workshop:{name:'🧵 Майстерня',seconds:1500,column:'workshop'},
+  hospital:{name:'🏥 Лікарня',seconds:2400,column:'hospital'}
 };
 
 const BUILDING_COSTS = {
@@ -102,23 +101,18 @@ function verifyTelegram(initData){
     .sort(([a],[b])=>a.localeCompare(b))
     .map(([k,v])=>`${k}=${v}`).join('\n');
 
-  const secret=crypto
-    .createHmac('sha256','WebAppData')
-    .update(process.env.BOT_TOKEN)
-    .digest();
+  const secret=crypto.createHmac('sha256','WebAppData')
+    .update(process.env.BOT_TOKEN).digest();
 
-  const expected=crypto
-    .createHmac('sha256',secret)
-    .update(dataCheck)
-    .digest('hex');
+  const expected=crypto.createHmac('sha256',secret)
+    .update(dataCheck).digest('hex');
 
-  if(hash.length !== expected.length ||
+  if(hash.length!==expected.length ||
      !crypto.timingSafeEqual(Buffer.from(hash),Buffer.from(expected)))
     throw new Error('Невірна Telegram авторизація');
 
   const user=JSON.parse(p.get('user')||'{}');
   if(!user.id) throw new Error('Не знайдено Telegram ID');
-
   return user;
 }
 
@@ -126,9 +120,39 @@ function getUserId(req){
   return verifyTelegram(req.headers['x-telegram-init-data']).id;
 }
 
+function getPlayer(id){
+  return db.prepare('SELECT * FROM players WHERE telegram_id = ?').get(id);
+}
+
+function settleConstruction(player){
+  if(!player || !player.building_type || !player.building_ends_at)
+    return player;
+
+  if(player.building_ends_at > Math.floor(Date.now()/1000))
+    return player;
+
+  const b=BUILDINGS[player.building_type];
+  if(b){
+    db.prepare(`
+      UPDATE players
+      SET ${b.column}=${b.column}+1,
+          building_type=NULL,
+          building_ends_at=NULL
+      WHERE telegram_id=?
+    `).run(player.telegram_id);
+  } else {
+    db.prepare(`
+      UPDATE players
+      SET building_type=NULL, building_ends_at=NULL
+      WHERE telegram_id=?
+    `).run(player.telegram_id);
+  }
+  return getPlayer(player.telegram_id);
+}
+
 function publicUser(r){
   const remaining = r.building_type && r.building_ends_at
-    ? Math.max(0, Math.ceil((r.building_ends_at * 1000 - Date.now()) / 1000))
+    ? Math.max(0, Math.ceil(r.building_ends_at - Date.now()/1000))
     : 0;
 
   return {
@@ -144,6 +168,11 @@ function publicUser(r){
     villages:r.villages,
     houses:r.houses,
     militaryPower:r.military_power,
+    buildings:{
+      house:r.houses,smithy:r.smithy,farm:r.farm,stable:r.stable,
+      barracks:r.barracks,range:r.range,temple:r.temple,
+      bakery:r.bakery,workshop:r.workshop,hospital:r.hospital
+    },
     resources:{
       stone:r.stone,wood:r.wood,iron:r.iron,straw:r.straw,
       brick:r.brick,clay:r.clay,sand:r.sand,bread:r.bread,
@@ -162,14 +191,25 @@ function publicUser(r){
   };
 }
 
-function getPlayer(id){
-  return db.prepare('SELECT * FROM players WHERE telegram_id=?').get(id);
+function currentPlayer(id){
+  return settleConstruction(getPlayer(id));
 }
 
 app.get('/api/me',(req,res)=>{
   try{
     const id=getUserId(req);
-    const player=getCurrentPlayer(id);
+    const player=currentPlayer(id);
+    if(!player) return res.json({registered:false});
+    res.json(publicUser(player));
+  }catch(e){
+    res.status(401).json({error:e.message});
+  }
+});
+
+app.get('/api/state',(req,res)=>{
+  try{
+    const id=getUserId(req);
+    const player=currentPlayer(id);
     if(!player) return res.json({registered:false});
     res.json(publicUser(player));
   }catch(e){
@@ -193,10 +233,9 @@ app.post('/api/register',(req,res)=>{
 
     if(!player){
       db.prepare(`
-        INSERT INTO players (telegram_id, kingdom_name, ruler_name)
-        VALUES (?, ?, ?)
-      `).run(id, kingdom, ruler);
-
+        INSERT INTO players (telegram_id,kingdom_name,ruler_name)
+        VALUES (?,?,?)
+      `).run(id,kingdom,ruler);
       player=getPlayer(id);
     }
 
@@ -210,97 +249,42 @@ app.post('/api/build',(req,res)=>{
   try{
     const id=getUserId(req);
     const type=String(req.body.type||'');
-    if(!BUILDINGS[type]) return res.status(400).json({error:'Невідома будівля'});
+    if(!BUILDINGS[type])
+      return res.status(400).json({error:'Невідома будівля'});
 
-    const player=getPlayer(id);
-    if(!player) return res.status(400).json({error:'Спочатку створи королівство'});
+    const player=currentPlayer(id);
+    if(!player)
+      return res.status(400).json({error:'Спочатку створи королівство'});
 
-    if(player.building_type && player.building_ends_at){
-      const remaining=Math.ceil((player.building_ends_at*1000-Date.now())/1000);
-      if(remaining>0) return res.status(400).json({error:'Зараз уже будується інша будівля'});
-    }
+    if(player.building_type && player.building_ends_at)
+      return res.status(400).json({error:'Зараз уже будується інша будівля'});
 
     const cost=BUILDING_COSTS[type];
+
     for(const [resource,amount] of Object.entries(cost)){
-      if((player[resource]||0) < amount){
+      if((player[resource]||0)<amount)
         return res.status(400).json({
           error:`Недостатньо ресурсу: ${resource}. Потрібно ${amount}, є ${player[resource]||0}`
         });
-      }
     }
 
-    const sets=[];
+    const fields=[];
     const values=[];
+
     for(const [resource,amount] of Object.entries(cost)){
-      sets.push(`${resource}=?`);
+      fields.push(`${resource}=?`);
       values.push((player[resource]||0)-amount);
     }
 
-    const endsAt=Math.floor(Date.now()/1000)+BUILDINGS[type].seconds;
-    sets.push('building_type=?','building_ends_at=?');
-    values.push(type,endsAt,id);
+    fields.push('building_type=?','building_ends_at=?');
+    values.push(type,Math.floor(Date.now()/1000)+BUILDINGS[type].seconds,id);
 
-    db.prepare(`UPDATE players SET ${sets.join(',')} WHERE telegram_id=?`).run(...values);
+    db.prepare(`UPDATE players SET ${fields.join(',')} WHERE telegram_id=?`)
+      .run(...values);
 
-    res.json(publicUser(getPlayer(id)));
+    res.json(publicUser(currentPlayer(id)));
   }catch(e){
     res.status(400).json({error:e.message});
-  }
-});
-
-// Finish completed construction when the player requests data.
-// The end time itself is stored in SQLite, so restart/redeploy does not reset it.
-function settleConstruction(player){
-  if(!player || !player.building_type || !player.building_ends_at)
-    return player;
-
-  if(player.building_ends_at > Math.floor(Date.now()/1000))
-    return player;
-
-  const type=player.building_type;
-
-  const tx=db.transaction(()=>{
-    const changes={building_type:null,building_ends_at:null};
-
-    const column = ({
-      house:'houses',
-      smithy:'smithy',
-      farm:'farm',
-      stable:'stable',
-      barracks:'barracks',
-      range:'range',
-      temple:'temple',
-      bakery:'bakery',
-      workshop:'workshop',
-      hospital:'hospital'
-    })[type];
-
-    if(column){
-      db.prepare(`
-        UPDATE players
-        SET ${column}=${column}+1, building_type=NULL, building_ends_at=NULL
-        WHERE telegram_id=?
-      `).run(player.telegram_id);
-    }
-  });
-
-  tx();
-  return getPlayer(player.telegram_id);
-}
-
-const oldGetPlayer=getPlayer;
-function getCurrentPlayer(id){
-  return settleConstruction(oldGetPlayer(id));
-}
-
-app.get('/api/state',(req,res)=>{
-  try{
-    const id=getUserId(req);
-    const player=getCurrentPlayer(id);
-    if(!player) return res.json({registered:false});
-    res.json(publicUser(player));
-  }catch(e){
-    res.status(401).json({error:e.message});
   }
 });
 
@@ -309,4 +293,4 @@ app.get('*',(req,res)=>{
 });
 
 const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log(`ROK v0.2 SQLite server on ${PORT}`));
+app.listen(PORT,()=>console.log(`ROK v0.3.1 SQLite server on ${PORT}`));
