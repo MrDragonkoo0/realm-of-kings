@@ -48,6 +48,15 @@ CREATE TABLE IF NOT EXISTS players (
   shieldmen INTEGER NOT NULL DEFAULT 0,
   cavalry INTEGER NOT NULL DEFAULT 0,
   knights INTEGER NOT NULL DEFAULT 0,
+  smithy INTEGER NOT NULL DEFAULT 0,
+  farm INTEGER NOT NULL DEFAULT 0,
+  stable INTEGER NOT NULL DEFAULT 0,
+  barracks INTEGER NOT NULL DEFAULT 0,
+  range INTEGER NOT NULL DEFAULT 0,
+  temple INTEGER NOT NULL DEFAULT 0,
+  bakery INTEGER NOT NULL DEFAULT 0,
+  workshop INTEGER NOT NULL DEFAULT 0,
+  hospital INTEGER NOT NULL DEFAULT 0,
   building_type TEXT,
   building_ends_at INTEGER,
   created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
@@ -65,6 +74,19 @@ const BUILDINGS = {
   bakery:{name:'🍞 Пекарня',seconds:1200},
   workshop:{name:'🧵 Майстерня',seconds:1500},
   hospital:{name:'🏥 Лікарня',seconds:2400}
+};
+
+const BUILDING_COSTS = {
+  house:{wood:15,stone:10,brick:10},
+  smithy:{wood:10,stone:15,iron:5,clay:5},
+  farm:{wood:5,stone:10,straw:25},
+  stable:{wood:30,stone:50,straw:25,iron:10,clay:10,brick:20},
+  barracks:{wood:25,stone:30,iron:15},
+  range:{wood:20,stone:20,iron:10},
+  temple:{wood:20,stone:35,brick:20},
+  bakery:{wood:15,stone:15,brick:15,clay:5},
+  workshop:{wood:20,stone:15,iron:10},
+  hospital:{wood:25,stone:30,brick:20}
 };
 
 function verifyTelegram(initData){
@@ -147,7 +169,7 @@ function getPlayer(id){
 app.get('/api/me',(req,res)=>{
   try{
     const id=getUserId(req);
-    const player=getPlayer(id);
+    const player=getCurrentPlayer(id);
     if(!player) return res.json({registered:false});
     res.json(publicUser(player));
   }catch(e){
@@ -188,35 +210,37 @@ app.post('/api/build',(req,res)=>{
   try{
     const id=getUserId(req);
     const type=String(req.body.type||'');
-
-    if(!BUILDINGS[type])
-      return res.status(400).json({error:'Невідома будівля'});
+    if(!BUILDINGS[type]) return res.status(400).json({error:'Невідома будівля'});
 
     const player=getPlayer(id);
-    if(!player)
-      return res.status(400).json({error:'Спочатку створи королівство'});
+    if(!player) return res.status(400).json({error:'Спочатку створи королівство'});
 
-    // One construction at a time.
     if(player.building_type && player.building_ends_at){
       const remaining=Math.ceil((player.building_ends_at*1000-Date.now())/1000);
+      if(remaining>0) return res.status(400).json({error:'Зараз уже будується інша будівля'});
+    }
 
-      if(remaining>0)
-        return res.status(400).json({error:'Зараз уже будується інша будівля'});
+    const cost=BUILDING_COSTS[type];
+    for(const [resource,amount] of Object.entries(cost)){
+      if((player[resource]||0) < amount){
+        return res.status(400).json({
+          error:`Недостатньо ресурсу: ${resource}. Потрібно ${amount}, є ${player[resource]||0}`
+        });
+      }
+    }
 
-      db.prepare(`
-        UPDATE players
-        SET building_type=NULL, building_ends_at=NULL
-        WHERE telegram_id=?
-      `).run(id);
+    const sets=[];
+    const values=[];
+    for(const [resource,amount] of Object.entries(cost)){
+      sets.push(`${resource}=?`);
+      values.push((player[resource]||0)-amount);
     }
 
     const endsAt=Math.floor(Date.now()/1000)+BUILDINGS[type].seconds;
+    sets.push('building_type=?','building_ends_at=?');
+    values.push(type,endsAt,id);
 
-    db.prepare(`
-      UPDATE players
-      SET building_type=?, building_ends_at=?
-      WHERE telegram_id=?
-    `).run(type, endsAt, id);
+    db.prepare(`UPDATE players SET ${sets.join(',')} WHERE telegram_id=?`).run(...values);
 
     res.json(publicUser(getPlayer(id)));
   }catch(e){
@@ -238,16 +262,23 @@ function settleConstruction(player){
   const tx=db.transaction(()=>{
     const changes={building_type:null,building_ends_at:null};
 
-    if(type==='house'){
+    const column = ({
+      house:'houses',
+      smithy:'smithy',
+      farm:'farm',
+      stable:'stable',
+      barracks:'barracks',
+      range:'range',
+      temple:'temple',
+      bakery:'bakery',
+      workshop:'workshop',
+      hospital:'hospital'
+    })[type];
+
+    if(column){
       db.prepare(`
         UPDATE players
-        SET houses=houses+1, building_type=NULL, building_ends_at=NULL
-        WHERE telegram_id=?
-      `).run(player.telegram_id);
-    }else{
-      db.prepare(`
-        UPDATE players
-        SET building_type=NULL, building_ends_at=NULL
+        SET ${column}=${column}+1, building_type=NULL, building_ends_at=NULL
         WHERE telegram_id=?
       `).run(player.telegram_id);
     }

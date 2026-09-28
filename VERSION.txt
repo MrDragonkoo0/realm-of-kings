@@ -1,3 +1,4 @@
 Realm of Kings (ROK)
-Version: 0.2
+Version: 0.3
 Storage: SQLite + Railway Volume
+Feature: resources + construction costs
