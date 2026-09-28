@@ -186,6 +186,16 @@ function showHouse() {
     `;
 }
 
+let houses = 0;
+
 function buildHouse() {
     alert("🏠 Будівництво будинку розпочато!");
+
+    setTimeout(function () {
+        houses++;
+
+        alert("✅ Будинок побудовано!");
+
+        showCapital();
+    }, 5000);
 }
