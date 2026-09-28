@@ -1,66 +1,19 @@
 *{box-sizing:border-box}
-body{
-    margin:0;
-    padding:10px;
-    background:#080a0f;
-    color:#fff;
-    font-family:Georgia,serif;
-}
+body{margin:0;padding:10px;background:#080a0f;color:#fff;font-family:Georgia,serif}
 #game,#registration{width:100%;max-width:600px;margin:auto}
-#registration{
-    margin-top:40px;
-    padding:25px;
-    text-align:center;
-    background:#171a20;
-    border:2px solid #8d6b32;
-    border-radius:18px;
-}
-#registration h1,#registration h2,h1{color:#e8bd55}
-#registration input{
-    width:100%;padding:14px;margin:10px 0;
-    background:#0d1015;color:white;
-    border:1px solid #80632d;border-radius:10px;font-size:16px
-}
-button{
-    color:#f1f1f1;
-    background:linear-gradient(145deg,#222832,#141820);
-    border:2px solid #80632d;
-    border-radius:11px;
-    padding:12px;
-    font-family:Georgia,serif;
-    font-size:15px;
-    font-weight:bold;
-    cursor:pointer;
-}
+#registration{margin-top:35px;padding:24px;text-align:center;background:#171a20;border:2px solid #8d6b32;border-radius:18px}
+h1,h2,#registration h1,#registration h2{color:#e8bd55}
+#registration input{width:100%;padding:14px;margin:10px 0;background:#0d1015;color:#fff;border:1px solid #80632d;border-radius:10px;font-size:16px}
+button{color:#f1f1f1;background:linear-gradient(145deg,#222832,#141820);border:2px solid #80632d;border-radius:11px;padding:12px;font-family:Georgia,serif;font-size:15px;font-weight:bold;cursor:pointer}
 #registration button{width:100%}
 button:active{transform:scale(.97)}
 h1{text-align:center;font-size:24px;margin:7px 0 14px}
-.kingdom{
-    background:#171a20;
-    border:2px solid #8d6b32;
-    border-radius:16px;
-    padding:15px;
-    text-align:center
-}
-.kingdom h2{color:#e8bd55;font-size:21px;margin:0 0 8px}
-.kingdom p{font-size:18px;margin:7px 0}
+.kingdom{background:#171a20;border:2px solid #8d6b32;border-radius:16px;padding:15px;text-align:center}
+.kingdom h2{font-size:21px;margin:0 0 8px}.kingdom p{font-size:18px;margin:7px 0}
 .level{display:flex;justify-content:space-between;font-size:15px;margin-top:12px}
-.xp{height:12px;margin-top:7px;background:#090b0f;border:2px solid #9a762f;border-radius:10px;overflow:hidden}
-.xp-fill{width:0;height:100%;background:#e0b84d}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
-.stats div{
-    background:#171a20;border:1px solid #735827;border-radius:10px;
-    text-align:center;padding:7px 2px;font-size:19px
-}
-.stats b{display:block;color:#e8bd55;font-size:16px;margin-top:3px}
-.menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.menu button{min-height:52px}
-.menu span{color:#e8bd55;font-size:13px}
-p{font-size:16px;margin:8px 0}
-hr{border:0;border-top:1px solid #735827;margin:15px 0}
-@media(max-width:600px){
-    body{padding:7px}
-    h1{font-size:22px}
-    .menu{gap:7px}
-    .menu button{min-height:50px;font-size:14px}
-}
+.xp{height:12px;margin-top:7px;background:#090b0f;border:2px solid #9a762f;border-radius:10px;overflow:hidden}.xp-fill{height:100%;background:#e0b84d}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.stats div{background:#171a20;border:1px solid #735827;border-radius:10px;text-align:center;padding:7px 2px;font-size:19px}.stats b{display:block;color:#e8bd55;font-size:16px;margin-top:3px}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.menu button{min-height:52px}.menu span{color:#e8bd55;font-size:13px}
+p{font-size:16px;margin:8px 0}hr{border:0;border-top:1px solid #735827;margin:15px 0}
+.error{padding:12px;border:1px solid #8d6b32;background:#171a20;border-radius:10px;text-align:center}
+@media(max-width:600px){body{padding:7px}h1{font-size:22px}.menu{gap:7px}.menu button{min-height:50px;font-size:14px}}
