@@ -77,16 +77,16 @@ function showCities(){document.getElementById('game').innerHTML=`<h1>🏘️ М�
 function showCapital(){document.getElementById('game').innerHTML=`<h1>🏰 Столиця</h1><p>👥 Населення: ${state.population}</p><p>🏛️ Ратуша I рівень</p><p>🏦 Казна I рівень</p><p>📦 Склад I рівень</p><p>🏪 Ринок I рівень</p><p>🏰 Стіни I рівень</p><p>🚪 Ворота I рівень</p><p>🏠 Будинки: ${state.houses}</p><div class="menu"><button onclick="showConstruction()">🔨 БУДІВНИЦТВО</button><button onclick="showCities()">⬅️ НАЗАД</button></div>`;}
 
 const buildings={
-house:{title:'🏠 Будинки',cost:['🪵 Дерево: 15','🪨 Камінь: 10','🧱 Цегла: 10'],time:300,label:'5 хв'},
-smithy:{title:'⚒️ Кузня',cost:['🪵 Дерево: 10','🪨 Камінь: 15','⛓️ Залізо: 5','🏺 Глина: 5'],time:1200,label:'20 хв'},
-farm:{title:'🌾 Ферма',cost:['🪵 Дерево: 5','🪨 Камінь: 10','🌾 Солома: 25'],time:900,label:'15 хв'},
-stable:{title:'🐴 Конюшня',cost:['🪵 Дерево: 30','🪨 Камінь: 50','🌾 Солома: 25','⛓️ Залізо: 10','🏺 Глина: 10','🧱 Цегла: 20'],time:2400,label:'40 хв'},
-barracks:{title:'🛡️ Казарми',cost:['🪵 Дерево: 25','🪨 Камінь: 30','⛓️ Залізо: 15'],time:1800,label:'30 хв'},
-range:{title:'🏹 Стрільбище',cost:['🪵 Дерево: 20','🪨 Камінь: 20','⛓️ Залізо: 10'],time:1500,label:'25 хв'},
-temple:{title:'⛪ Храм',cost:['🪵 Дерево: 20','🪨 Камінь: 35','🧱 Цегла: 20'],time:2100,label:'35 хв'},
-bakery:{title:'🍞 Пекарня',cost:['🪵 Дерево: 15','🪨 Камінь: 15','🧱 Цегла: 15','🏺 Глина: 5'],time:1200,label:'20 хв'},
-workshop:{title:'🧵 Майстерня',cost:['🪵 Дерево: 20','🪨 Камінь: 15','⛓️ Залізо: 10'],time:1500,label:'25 хв'},
-hospital:{title:'🏥 Лікарня',cost:['🪵 Дерево: 25','🪨 Камінь: 30','🧱 Цегла: 20'],time:2400,label:'40 хв'}
+house:{title:'🏠 Будинки',cost:{wood:15,stone:10,brick:10},labels:['🪵 Дерево: 15','🪨 Камінь: 10','🧱 Цегла: 10'],time:300,label:'5 хв'},
+smithy:{title:'⚒️ Кузня',cost:{wood:10,stone:15,iron:5,clay:5},labels:['🪵 Дерево: 10','🪨 Камінь: 15','⛓️ Залізо: 5','🏺 Глина: 5'],time:1200,label:'20 хв'},
+farm:{title:'🌾 Ферма',cost:{wood:5,stone:10,straw:25},labels:['🪵 Дерево: 5','🪨 Камінь: 10','🌾 Солома: 25'],time:900,label:'15 хв'},
+stable:{title:'🐴 Конюшня',cost:{wood:30,stone:50,straw:25,iron:10,clay:10,brick:20},labels:['🪵 Дерево: 30','🪨 Камінь: 50','🌾 Солома: 25','⛓️ Залізо: 10','🏺 Глина: 10','🧱 Цегла: 20'],time:2400,label:'40 хв'},
+barracks:{title:'🛡️ Казарми',cost:{wood:25,stone:30,iron:15},labels:['🪵 Дерево: 25','🪨 Камінь: 30','⛓️ Залізо: 15'],time:1800,label:'30 хв'},
+range:{title:'🏹 Стрільбище',cost:{wood:20,stone:20,iron:10},labels:['🪵 Дерево: 20','🪨 Камінь: 20','⛓️ Залізо: 10'],time:1500,label:'25 хв'},
+temple:{title:'⛪ Храм',cost:{wood:20,stone:35,brick:20},labels:['🪵 Дерево: 20','🪨 Камінь: 35','🧱 Цегла: 20'],time:2100,label:'35 хв'},
+bakery:{title:'🍞 Пекарня',cost:{wood:15,stone:15,brick:15,clay:5},labels:['🪵 Дерево: 15','🪨 Камінь: 15','🧱 Цегла: 15','🏺 Глина: 5'],time:1200,label:'20 хв'},
+workshop:{title:'🧵 Майстерня',cost:{wood:20,stone:15,iron:10},labels:['🪵 Дерево: 20','🪨 Камінь: 15','⛓️ Залізо: 10'],time:1500,label:'25 хв'},
+hospital:{title:'🏥 Лікарня',cost:{wood:25,stone:30,brick:20},labels:['🪵 Дерево: 25','🪨 Камінь: 30','🧱 Цегла: 20'],time:2400,label:'40 хв'}
 };
 
 function showConstruction(){
@@ -101,8 +101,22 @@ function showConstruction(){
 
 function showBuilding(id){
  const b=buildings[id];
+ const resources=state.resources;
+ const costText=b.labels.map((label,i)=>{
+   const keys=Object.keys(b.cost);
+   const key=keys[i];
+   return `<p>${label} — є: ${resources[key] ?? 0}</p>`;
+ }).join('');
  const busy=!!state.building;
- document.getElementById('game').innerHTML=`<h1>${b.title}</h1>${b.cost.map(x=>`<p>${x}</p>`).join('')}<hr><p>⏱️ Час будівництва: ${b.label}</p><div class="menu"><button ${busy?'disabled':''} onclick="startBuilding('${id}')">🔨 ПОБУДУВАТИ</button><button onclick="showConstruction()">⬅️ НАЗАД</button></div>`;
+ document.getElementById('game').innerHTML=`
+   <h1>${b.title}</h1>
+   ${costText}
+   <hr>
+   <p>⏱️ Час будівництва: ${b.label}</p>
+   <div class="menu">
+     <button ${busy?'disabled':''} onclick="startBuilding('${id}')">🔨 ПОБУДУВАТИ</button>
+     <button onclick="showConstruction()">⬅️ НАЗАД</button>
+   </div>`;
 }
 
 async function startBuilding(type){
@@ -126,7 +140,29 @@ async function refresh(){
 }
 function startPolling(){if(pollTimer)return;pollTimer=setInterval(refresh,1000);}
 
-function showWarehouse(){document.getElementById('game').innerHTML=`<h1>📦 Склад</h1><p>🪨 Камінь: ${state.resources.stone}</p><p>🪵 Дерево: ${state.resources.wood}</p><p>⛓️ Залізо: ${state.resources.iron}</p><p>🌾 Солома: ${state.resources.straw}</p><p>🧱 Цегла: ${state.resources.brick}</p><p>🏺 Глина: ${state.resources.clay}</p><p>🏖️ Пісок: ${state.resources.sand}</p><hr><p>🍞 Хліб: ${state.resources.bread}</p><p>🥩 М'ясо: ${state.resources.meat}</p><p>🌾 Борошно: ${state.resources.flour}</p><p>🥕 Морква: ${state.resources.carrot}</p><p>🥔 Картопля: ${state.resources.potato}</p><p>💧 Вода: ${state.resources.water}</p><p>🍎 Яблука: ${state.resources.apples}</p><button onclick="showKingdom()">⬅️ Назад</button>`;}
+function showWarehouse(){
+ document.getElementById('game').innerHTML=`
+ <h1>📦 Склад</h1>
+ <h2>🏗️ Ресурси</h2>
+ <p>🪨 Камінь: ${state.resources.stone}</p>
+ <p>🪵 Дерево: ${state.resources.wood}</p>
+ <p>⛓️ Залізо: ${state.resources.iron}</p>
+ <p>🌾 Солома: ${state.resources.straw}</p>
+ <p>🧱 Цегла: ${state.resources.brick}</p>
+ <p>🏺 Глина: ${state.resources.clay}</p>
+ <p>🏖️ Пісок: ${state.resources.sand}</p>
+ <hr>
+ <h2>🍎 Їжа</h2>
+ <p>🍞 Хліб: ${state.resources.bread}</p>
+ <p>🥩 М'ясо: ${state.resources.meat}</p>
+ <p>🌾 Борошно: ${state.resources.flour}</p>
+ <p>🥕 Морква: ${state.resources.carrot}</p>
+ <p>🥔 Картопля: ${state.resources.potato}</p>
+ <p>💧 Вода: ${state.resources.water}</p>
+ <p>🍎 Яблука: ${state.resources.apples}</p>
+ <button onclick="showKingdom()">⬅️ Назад</button>`;
+}
+
 function showArmy(){document.getElementById('game').innerHTML=`<h1>⚔️ Армія</h1><p>🗡️ Мечники: ${state.army.swordsmen}</p><p>🏹 Лучники: ${state.army.archers}</p><p>🛡️ Щитоносці: ${state.army.shieldmen}</p><p>🐎 Легка кіннота: ${state.army.cavalry}</p><p>🛡️ Лицарі: ${state.army.knights}</p><hr><p>💪 Військова сила: ${state.militaryPower}</p><button onclick="showKingdom()">⬅️ Назад</button>`;}
 function showVillages(){document.getElementById('game').innerHTML=`<h1>🏠 Села</h1><p>🏠 Сіл: ${state.villages}</p><button onclick="showKingdom()">⬅️ Назад</button>`;}
 function showTreasury(){document.getElementById('game').innerHTML=`<h1>💰 Казна</h1><p>💰 Золото: ${state.gold}</p><button onclick="showKingdom()">⬅️ Назад</button>`;}
