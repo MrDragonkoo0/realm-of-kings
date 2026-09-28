@@ -56,19 +56,27 @@ const columns = [
 ];
 for (const [name,def] of columns) { try { db.exec(`ALTER TABLE players ADD COLUMN ${name} ${def}`); } catch (_) {} }
 
+const V05_COLUMNS = [
+ ['sawmill','INTEGER NOT NULL DEFAULT 0'],['mine','INTEGER NOT NULL DEFAULT 0'],
+ ['woodcutters','INTEGER NOT NULL DEFAULT 0'],['miners','INTEGER NOT NULL DEFAULT 0'],
+ ['last_extraction_at','INTEGER NOT NULL DEFAULT 0']
+];
+for (const [name,def] of V05_COLUMNS) { try { db.exec(`ALTER TABLE players ADD COLUMN ${name} ${def}`); } catch (_) {} }
+
 const BUILDINGS = {
  house:{name:'🏠 Будинки',seconds:300,column:'houses'}, smithy:{name:'⚒️ Кузня',seconds:1200,column:'smithy'},
  farm:{name:'🌾 Ферма',seconds:900,column:'farm'}, stable:{name:'🐴 Конюшня',seconds:2400,column:'stable'},
  barracks:{name:'🛡️ Казарми',seconds:1800,column:'barracks'}, range:{name:'🏹 Стрільбище',seconds:1500,column:'range'},
  temple:{name:'⛪ Храм',seconds:2100,column:'temple'}, bakery:{name:'🍞 Пекарня',seconds:1200,column:'bakery'},
- workshop:{name:'🧵 Майстерня',seconds:1500,column:'workshop'}, hospital:{name:'🏥 Лікарня',seconds:2400,column:'hospital'}
+ workshop:{name:'🧵 Майстерня',seconds:1500,column:'workshop'}, hospital:{name:'🏥 Лікарня',seconds:2400,column:'hospital'},
+ sawmill:{name:'🪚 Лісопилка',seconds:1200,column:'sawmill'}, mine:{name:'⛏️ Шахта',seconds:1800,column:'mine'}
 };
 const BUILDING_COSTS = {
  house:{wood:15,stone:10,brick:10}, smithy:{wood:10,stone:15,iron:5,clay:5},
  farm:{wood:5,stone:10,straw:25}, stable:{wood:30,stone:50,straw:25,iron:10,clay:10,brick:20},
  barracks:{wood:25,stone:30,iron:15}, range:{wood:20,stone:20,iron:10},
  temple:{wood:20,stone:35,brick:20}, bakery:{wood:15,stone:15,brick:15,clay:5},
- workshop:{wood:20,stone:15,iron:10}, hospital:{wood:25,stone:30,brick:20}
+ workshop:{wood:20,stone:15,iron:10}, hospital:{wood:25,stone:30,brick:20}, sawmill:{wood:20,stone:15}, mine:{wood:30,stone:40}
 };
 const UPGRADES = {
  townhall:{name:'🏛️ Ратуша',column:'townhall_level',base:{stone:40,wood:30,brick:20},time:900},
@@ -104,18 +112,39 @@ function settleConstruction(p){
  else db.prepare('UPDATE players SET building_type=NULL,building_ends_at=NULL WHERE telegram_id=?').run(p.telegram_id);
  return getPlayer(p.telegram_id);
 }
+
+function settleExtraction(p){
+ if(!p) return p;
+ const now=Math.floor(Date.now()/1000);
+ const last=p.last_extraction_at||now;
+ const elapsed=Math.max(0, now-last);
+ const cycles=Math.floor(elapsed/60);
+ if(cycles<1) return p;
+ let woodGain=0, stoneGain=0, ironGain=0;
+ if(p.woodcutters>0 && p.sawmill>0) woodGain=p.woodcutters*2*cycles*p.sawmill;
+ if(p.miners>0 && p.mine>0){ stoneGain=p.miners*1*cycles*p.mine; ironGain=p.miners*1*cycles*p.mine; }
+ if(woodGain||stoneGain||ironGain){
+   db.prepare('UPDATE players SET wood=wood+?,stone=stone+?,iron=iron+?,last_extraction_at=? WHERE telegram_id=?').run(woodGain,stoneGain,ironGain,last+cycles*60,p.telegram_id);
+ } else {
+   db.prepare('UPDATE players SET last_extraction_at=? WHERE telegram_id=?').run(last+cycles*60,p.telegram_id);
+ }
+ return getPlayer(p.telegram_id);
+}
 function publicUser(r){
  const remaining=r.building_type&&r.building_ends_at?Math.max(0,Math.ceil(r.building_ends_at-Date.now()/1000)):0;
  const capacity=Math.max(10,r.houses*10 + r.townhall_level*20);
  const defense=r.walls_level*20+r.gate_level*15+r.military_power;
  return {registered:!!r.kingdom_name,kingdom:r.kingdom_name||'',ruler:r.ruler_name||'',level:r.level,xp:r.xp,population:r.population,populationCapacity:capacity,gold:r.gold,gems:r.gems,cities:r.cities,villages:r.villages,houses:r.houses,militaryPower:r.military_power,defense,fieldCount:r.field_count,
- buildings:{house:r.houses,smithy:r.smithy,farm:r.farm,stable:r.stable,barracks:r.barracks,range:r.range,temple:r.temple,bakery:r.bakery,workshop:r.workshop,hospital:r.hospital},
+ buildings:{house:r.houses,smithy:r.smithy,farm:r.farm,stable:r.stable,barracks:r.barracks,range:r.range,temple:r.temple,bakery:r.bakery,workshop:r.workshop,hospital:r.hospital,sawmill:r.sawmill,mine:r.mine},
+ workers:{woodcutters:r.woodcutters,miners:r.miners,free:Math.max(0,r.population-r.woodcutters-r.miners)},
+ extraction:{woodcutters:r.woodcutters,miners:r.miners,sawmill:r.sawmill,mine:r.mine},
+ sites:{forest:true,stone:true,iron:true},
  capital:{townhall:r.townhall_level,warehouse:r.warehouse_level,market:r.market_level,walls:r.walls_level,gate:r.gate_level},
  resources:{stone:r.stone,wood:r.wood,iron:r.iron,straw:r.straw,brick:r.brick,clay:r.clay,sand:r.sand,bread:r.bread,meat:r.meat,flour:r.flour,carrot:r.carrot,potato:r.potato,water:r.water,apples:r.apples,wheat:r.wheat},
  army:{swordsmen:r.swordsmen,archers:r.archers,shieldmen:r.shieldmen,cavalry:r.cavalry,knights:r.knights},
  building:r.building_type?{type:r.building_type,name:BUILDINGS[r.building_type]?.name||r.building_type,remaining}:null};
 }
-function currentPlayer(id){ return settleConstruction(getPlayer(id)); }
+function currentPlayer(id){ return settleExtraction(settleConstruction(getPlayer(id))); }
 function changeResources(id,changes){
  const p=currentPlayer(id); const sets=[],vals=[];
  for(const [k,v] of Object.entries(changes)){sets.push(`${k}=?`);vals.push((p[k]||0)+v);}
@@ -134,7 +163,21 @@ app.post('/api/build',(req,res)=>{try{const id=getUserId(req),type=String(req.bo
 
 app.post('/api/upgrade',(req,res)=>{try{const id=getUserId(req),type=String(req.body.type||''),p=currentPlayer(id),u=UPGRADES[type];if(!p||!u)return res.status(400).json({error:'Невідоме покращення'});if(p.building_type)return res.status(400).json({error:'Спочатку заверши поточне будівництво'});const level=p[u.column],cost=costForLevel(u.base,level);if(!canPay(p,cost))return res.status(400).json({error:'Недостатньо ресурсів'});deduct(id,cost);db.prepare(`UPDATE players SET ${u.column}=${u.column}+1, xp=xp+10 WHERE telegram_id=?`).run(id);res.json(publicUser(currentPlayer(id)));}catch(e){res.status(400).json({error:e.message});}});
 
-app.post('/api/gather',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(id),now=Math.floor(Date.now()/1000);if(!p)return res.status(400).json({error:'Немає королівства'});if(now-p.last_gather_at<10)return res.status(400).json({error:`Зачекай ${10-(now-p.last_gather_at)} с.`});const type=String(req.body.type||'');const gain={wood:10,stone:10,iron:4,straw:12,clay:6,sand:8}[type];if(!gain)return res.status(400).json({error:'Невідомий ресурс'});db.prepare(`UPDATE players SET ${type}=${type}+?,last_gather_at=?,xp=xp+2 WHERE telegram_id=?`).run(gain,now,id);res.json(publicUser(currentPlayer(id)));}catch(e){res.status(400).json({error:e.message});}});
+app.post('/api/gather',(req,res)=>res.status(400).json({error:'Ручний збір ресурсів прибрано у ROK v0.5. Призначай робітників у ліс або шахту.'}));
+app.post('/api/workers',(req,res)=>{try{
+ const id=getUserId(req),p=currentPlayer(id),type=String(req.body.type||''),delta=Math.trunc(Number(req.body.delta)||0);
+ if(!p)return res.status(400).json({error:'Немає королівства'});
+ if(!['woodcutters','miners'].includes(type) || ![-1,1].includes(delta)) return res.status(400).json({error:'Невірне призначення'});
+ const total=p.woodcutters+p.miners;
+ const current=p[type]||0;
+ if(delta>0 && total>=p.population) return res.status(400).json({error:'Усі доступні жителі вже працюють'});
+ if(delta<0 && current<1) return res.status(400).json({error:'Немає кого зняти з роботи'});
+ const b=type==='woodcutters'?p.sawmill:p.mine;
+ if(delta>0 && b<1) return res.status(400).json({error:type==='woodcutters'?'Потрібна лісопилка':'Потрібна шахта'});
+ db.prepare(`UPDATE players SET ${type}=${type}+?, last_extraction_at=? WHERE telegram_id=?`).run(delta,Math.floor(Date.now()/1000),id);
+ res.json(publicUser(currentPlayer(id)));
+}catch(e){res.status(400).json({error:e.message});}});
+app.get('/api/extraction',(req,res)=>{try{const p=currentPlayer(getUserId(req));if(!p)return res.status(400).json({error:'Немає королівства'});res.json({forest:{available:true,workers:p.woodcutters,production:p.woodcutters*2*p.sawmill},stoneMine:{available:p.mine>0,workers:p.miners,production:p.miners*p.mine},ironMine:{available:p.mine>0,workers:p.miners,production:p.miners*p.mine}});}catch(e){res.status(400).json({error:e.message});}});
 app.post('/api/field',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(id);if(!p||p.gold<100)return res.status(400).json({error:'Потрібно 100 золота'});db.prepare('UPDATE players SET gold=gold-100,field_count=field_count+1 WHERE telegram_id=?').run(id);res.json(publicUser(currentPlayer(id)));}catch(e){res.status(400).json({error:e.message});}});
 app.post('/api/harvest',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(id);if(!p||p.farm<1||p.field_count<1)return res.status(400).json({error:'Потрібна хоча б 1 ферма і поле'});const wheat=20*p.farm;db.prepare('UPDATE players SET wheat=wheat+?,straw=straw+?,xp=xp+5 WHERE telegram_id=?').run(wheat,10*p.farm,id);res.json(publicUser(currentPlayer(id)));}catch(e){res.status(400).json({error:e.message});}});
 
