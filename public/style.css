@@ -112,3 +112,36 @@ h1,h2,h3{color:var(--gold2)}
 .herald-option .royal-shield-emblem{width:65px;height:72px;object-fit:contain;}
 @media(min-width:480px){.asset-home-grid{gap:9px}.home-asset-button{aspect-ratio:3.45/1}}
 @media(max-width:360px){.asset-home-grid{gap:5px}.home-asset-button{aspect-ratio:3.1/1}}
+
+/* ROK v0.9.1 visual repair: clear text, compact cards, no baked-in screenshot labels */
+body{padding:0 0 calc(76px + env(safe-area-inset-bottom));background:radial-gradient(ellipse at top,#172334 0%,#090d14 58%);color:#f3ead8}
+#game{width:100%;max-width:620px;margin:0 auto;padding:12px 14px 18px}
+.rok-header{margin-bottom:12px}
+.resource-strip{margin:0 0 12px}
+.kingdom-hero{min-height:220px}
+.hero-content{min-height:220px;padding:14px 12px 10px}
+.hero-title{min-height:116px}
+.section-heading{margin:14px 2px 10px}
+.section-heading h2{font-size:22px;line-height:1.15}
+.asset-home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 14px}
+.home-asset-button{position:relative;display:flex;align-items:center;justify-content:flex-start;gap:11px;width:100%;min-height:70px;aspect-ratio:auto;padding:10px 12px;border:1px solid #8e6d36;border-radius:12px;background:linear-gradient(135deg,#1b2a3b 0%,#0d1520 78%);box-shadow:inset 0 1px 0 #ffffff12,0 4px 10px #0004;color:#f5e8cf;text-align:left;transition:transform .12s,border-color .12s,background .12s}
+.home-asset-button::before{content:"";position:absolute;inset:4px;border:1px solid #d0a64e55;border-radius:8px;pointer-events:none}
+.home-asset-button:active,.home-asset-button:focus-visible{transform:translateY(1px);border-color:#f4d277;background:linear-gradient(135deg,#3a2c1b,#172130);filter:none}
+.menu-card-icon{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;font-size:26px;line-height:1;filter:drop-shadow(0 2px 2px #0008)}
+.menu-card-label{position:relative;z-index:1;color:#f5e8cf;font-size:14px;font-weight:600;line-height:1.2;overflow-wrap:anywhere;text-shadow:0 1px 2px #000;}
+.news-card{margin:14px 0 0}
+#bottomNav{width:100%;max-width:620px;gap:3px;padding:7px 7px calc(7px + env(safe-area-inset-bottom));}
+#bottomNav button{min-height:52px;gap:3px;padding:5px 2px;color:#aab2bf;background:transparent;border:1px solid transparent;border-radius:9px;overflow:visible}
+#bottomNav button span{font-size:22px;line-height:1.05;color:#c7a75e}
+#bottomNav button small{display:block;font-size:10px;line-height:1.1;color:inherit;white-space:normal;text-align:center}
+#bottomNav button.active{background:linear-gradient(180deg,#d2a74622,#d2a74608);border-color:#a9843c;color:#f3d17a}
+#bottomNav button.active span{color:#f3d17a;text-shadow:0 0 8px #d6a84155}
+.flag-preview-wrap{padding:14px;display:flex;justify-content:center;align-items:center;min-height:210px;overflow:hidden;border-radius:12px}
+.option-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.herald-option{min-height:122px;padding:8px 5px;gap:7px;background:linear-gradient(145deg,#1a2838,#0c131d);}
+.herald-option .emblem-image{display:block;width:66px;height:76px;object-fit:contain;background:transparent}
+.herald-option .royal-shield-emblem{width:62px;height:78px;object-fit:contain}
+.herald-option span:last-child{font-size:11px;line-height:1.2;text-align:center;color:#f3e6cd}
+.flag-art .royal-shield-emblem{width:88px;height:110px;object-fit:contain}
+.flag-mini .royal-shield-emblem{width:29px;height:35px;object-fit:contain}
+@media(max-width:390px){#game{padding:10px 10px 16px}.asset-home-grid{gap:7px}.home-asset-button{min-height:65px;padding:9px 8px;gap:7px}.menu-card-icon{flex-basis:32px;width:32px;height:34px;font-size:23px}.menu-card-label{font-size:13px}.option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.herald-option{min-height:116px}#bottomNav button small{font-size:9px}}
