@@ -23,3 +23,18 @@
 - Зменшено порожні проміжки, налаштовано картки під вузькі екрани.
 - Збільшено та вирівняно плитки гербів у редакторі.
 - API, сервер і схема SQLite не змінювалися.
+
+
+## v0.9.3 — текстури інтерфейсу
+- Головні 12 карток показують реальні PNG-текстури через явні `img src` та мають стани normal/active/disabled.
+- Нижня навігація використовує п’ять наборів текстур, перемикаючи active/normal.
+- Усі 28 зображень гербів розташовані без підпапок у `public/heralds/`; код посилається на `/heralds/<id>.png`.
+- Фоновий SVG має абсолютний шлях; CSS/JS отримали версію `0.9.3` для очищення кешу.
+
+
+## v0.9.4 — UI assets
+- Menu button textures: `public/ui/menu_buttons/<category>/{normal,active,disabled}.png`.
+- Navigation textures: `public/ui/navigation/<tab>/{normal,active,disabled}.png` (where an imported unique state was unavailable, the v0.9.3 fallback is retained).
+- New uploaded heralds: `public/heralds/crest_01.png` through `crest_29.png`, all in one folder with existing heralds.
+- The flag editor includes the new crest choices.
+- Database configuration and server logic are preserved; do not remove Railway Volume `/data`.
