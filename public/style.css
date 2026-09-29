@@ -94,3 +94,21 @@ h1,h2,h3{color:var(--gold2)}
 .flag-preview-wrap{background:#0b111a;border:1px solid #2a3544}.flag-art{box-shadow:0 5px 15px #0009}.flag-section-title{color:#f0d28a}.option-btn{background:#172130;border-color:#5e4b2e}.option-btn.selected{border-color:#f6d365;background:#42351d}.herald-option{min-height:105px}.notice{padding:11px;background:#332619;border:1px solid #b58a3e;border-radius:9px}
 @media(min-width:480px){#game{padding:16px}.hero-content{padding:19px}.home-grid{gap:10px}.home-tile{min-height:110px}.resource-chip{font-size:14px}}
 @media(max-width:370px){#game{padding:9px}.home-grid{gap:6px}.home-tile{min-height:92px}.tile-icon{font-size:24px}.home-tile strong{font-size:12px}.home-tile small{font-size:8px}.hero-content{padding:13px 11px}.hero-title h1{font-size:22px}.hero-flag{right:6px}.hero-stat-row span{font-size:9px;padding:7px 4px}#bottomNav button small{font-size:9px}}
+
+
+/* ROK v0.9 — integrated illustrated menu textures */
+.asset-home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.home-asset-button{display:block;width:100%;min-width:0;aspect-ratio:3.35/1;min-height:0;padding:0;border:0;border-radius:0;background-color:transparent;background-image:var(--normal);background-position:center;background-size:100% 100%;background-repeat:no-repeat;box-shadow:none;outline-offset:2px;}
+.home-asset-button:active,.home-asset-button:focus-visible{background-image:var(--active);transform:scale(.985);filter:brightness(1.08)}
+.home-asset-button:focus-visible{outline:2px solid #f1d58d}
+#bottomNav button{padding:2px 1px;overflow:hidden}
+#bottomNav button img{display:block;width:100%;height:auto;max-height:42px;object-fit:contain}
+#bottomNav button.active{background:transparent;border-color:transparent}
+#bottomNav button.active img{filter:drop-shadow(0 0 4px #d6a84155)}
+.royal-shield-emblem{object-fit:contain;background:transparent;}
+.flag-art .royal-shield-emblem{width:94px;height:116px;max-width:85%;max-height:82%;}
+.flag-art.rectangle .royal-shield-emblem{width:78px;height:82px;max-height:82%;}
+.flag-mini .royal-shield-emblem{width:29px;height:35px;}
+.herald-option .royal-shield-emblem{width:65px;height:72px;object-fit:contain;}
+@media(min-width:480px){.asset-home-grid{gap:9px}.home-asset-button{aspect-ratio:3.45/1}}
+@media(max-width:360px){.asset-home-grid{gap:5px}.home-asset-button{aspect-ratio:3.1/1}}
