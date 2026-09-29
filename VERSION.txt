@@ -1,2 +1,2 @@
-Realm of Kings v0.9
-Telegram Mini App UI textures + 44 herald options
+Realm of Kings v0.9.1
+Visual repair: readable menu cards, compact spacing, labels in HTML, improved herald selector.
