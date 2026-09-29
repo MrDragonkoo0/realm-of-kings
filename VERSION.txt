@@ -1,5 +1,2 @@
-Realm of Kings v0.9.8
-- Stabilized menu texture reset on touch/pointer events.
-- Fixed griffin herald image mapping.
-- Added mobile navigation sizing override and cache busting.
-- Keeps existing SQLite configuration and data path unchanged.
+Realm of Kings v0.9.9
+Fix: removed duplicated JavaScript fragment that caused a syntax error and blank Mini App screen.
