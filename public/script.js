@@ -6,20 +6,22 @@ function showRegistration(){registration.style.display='block';game.style.displa
 function nextStep(){if(!kingdomName.value.trim())return alert('Введи назву королівства!');step1.style.display='none';step2.style.display='block'}
 async function createKingdom(){if(!rulerName.value.trim())return alert('Введи імʼя правителя!');try{state=await api('/api/register',{method:'POST',body:JSON.stringify({kingdom:kingdomName.value.trim(),ruler:rulerName.value.trim()})});registration.style.display='none';game.style.display='block';showKingdom()}catch(e){alert(e.message)}}
 function showKingdom(){const s=state,b=s.building,r=s.resources||{};const num=v=>Number(v||0).toLocaleString('uk-UA');const navEl=document.getElementById('bottomNav');if(navEl)navEl.style.display='grid';setActiveTab('home');game.innerHTML=`<div class="rok-home"><header class="rok-header"><div class="brand-mark">♛</div><div class="brand-copy"><strong>REALM OF KINGS</strong><small>Хроніки твого королівства</small></div><button class="settings-button" onclick="showProfile()" aria-label="Налаштування">⚙</button></header><div class="resource-strip"><div class="resource-chip"><span class="res-icon gold-icon">●</span><span>${num(s.gold)}</span></div><div class="resource-chip"><span class="res-icon wood-icon">▰</span><span>${num(r.wood)}</span></div><div class="resource-chip"><span class="res-icon stone-icon">◆</span><span>${num(r.stone)}</span></div><div class="resource-chip"><span class="res-icon iron-icon">▰</span><span>${num(r.iron)}</span></div><div class="resource-chip"><span class="res-icon gem-icon">♦</span><span>${num(s.gems)}</span></div></div><section class="kingdom-hero"><div class="hero-scene"></div><div class="hero-shade"></div><div class="hero-content"><div class="hero-flag">${flagMarkup(s.flag,true)}</div><div class="hero-title"><span class="eyebrow">ТВОЄ КОРОЛІВСТВО</span><h1>${esc(s.kingdom)}</h1><p>👑 ${esc(s.ruler)}</p><div class="hero-level"><span>Рівень ${s.level}</span><b>${Math.min(100,s.xp%100)}%</b></div><div class="xp hero-xp"><div class="xp-fill" style="width:${Math.min(100,s.xp%100)}%"></div></div></div><div class="hero-stat-row"><span>👥 Населення <b>${num(s.population)}</b></span><span>⚔️ Сила <b>${num(s.militaryPower)}</b></span><span>🏰 Міста <b>${num(s.cities)}</b></span></div></div></section>${b?`<div class="building-alert">🔨 <span>Будується: <b>${esc(b.name)}</b></span><strong>${formatTime(b.remaining)}</strong></div>`:''}<div class="section-heading"><div><small>КЕРУВАННЯ</small><h2>Твої володіння</h2></div><span class="heading-ornament">✦</span></div><div class="home-grid asset-home-grid">
-<button class="home-asset-button" onclick="showCities()"><span class="menu-card-icon">🏰</span><span class="menu-card-label">Міста</span></button>
-<button class="home-asset-button" onclick="showVillages()"><span class="menu-card-icon">🏡</span><span class="menu-card-label">Села</span></button>
-<button class="home-asset-button" onclick="showArmy()"><span class="menu-card-icon">⚔️</span><span class="menu-card-label">Війська</span></button>
-<button class="home-asset-button" onclick="showEconomy()"><span class="menu-card-icon">💰</span><span class="menu-card-label">Казна</span></button>
-<button class="home-asset-button" onclick="showPopulation()"><span class="menu-card-icon">👥</span><span class="menu-card-label">Населення</span></button>
-<button class="home-asset-button" onclick="showQuests()"><span class="menu-card-icon">📜</span><span class="menu-card-label">Завдання</span></button>
-<button class="home-asset-button" onclick="showDiplomacy()"><span class="menu-card-icon">🤝</span><span class="menu-card-label">Дипломатія</span></button>
-<button class="home-asset-button" onclick="showTrade()"><span class="menu-card-icon">🏪</span><span class="menu-card-label">Ринок</span></button>
-<button class="home-asset-button" onclick="showConstruction()"><span class="menu-card-icon">🏘️</span><span class="menu-card-label">Будівлі</span></button>
-<button class="home-asset-button" onclick="showTechnology()"><span class="menu-card-icon">⚙️</span><span class="menu-card-label">Технології</span></button>
-<button class="home-asset-button" onclick="showContracts()"><span class="menu-card-icon">📃</span><span class="menu-card-label">Контракти</span></button>
-<button class="home-asset-button" onclick="showExpeditions()"><span class="menu-card-icon">🧭</span><span class="menu-card-label">Дослідження</span></button>
-</div><section class="news-card"><div class="news-heading"><span>📜</span><div><small>КОРОЛІВСЬКІ ХРОНІКИ</small><h3>Стан держави</h3></div></div><p>${b?`Триває будівництво: ${esc(b.name)}.`:'Твоє королівство готове до розвитку. Призначай робітників, розбудовуй міста й посилюй військо.'}</p><button class="subtle-action" onclick="showMessages()">Відкрити хроніки <span>›</span></button></section></div>`} 
-function setActiveTab(tab){document.querySelectorAll('#bottomNav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab))}
+<button class="home-asset-button texture-cities" data-texture-button onclick="showCities()" aria-label="Міста"><img class="menu-texture" src="/ui/menu_buttons/cities/normal.png" data-normal="/ui/menu_buttons/cities/normal.png" data-active="/ui/menu_buttons/cities/active.png" data-disabled="/ui/menu_buttons/cities/disabled.png" alt="Міста" draggable="false"></button>
+<button class="home-asset-button texture-villages" data-texture-button onclick="showVillages()" aria-label="Села"><img class="menu-texture" src="/ui/menu_buttons/villages/normal.png" data-normal="/ui/menu_buttons/villages/normal.png" data-active="/ui/menu_buttons/villages/active.png" data-disabled="/ui/menu_buttons/villages/disabled.png" alt="Села" draggable="false"></button>
+<button class="home-asset-button texture-army" data-texture-button onclick="showArmy()" aria-label="Війська"><img class="menu-texture" src="/ui/menu_buttons/army/normal.png" data-normal="/ui/menu_buttons/army/normal.png" data-active="/ui/menu_buttons/army/active.png" data-disabled="/ui/menu_buttons/army/disabled.png" alt="Війська" draggable="false"></button>
+<button class="home-asset-button texture-treasury" data-texture-button onclick="showEconomy()" aria-label="Казна"><img class="menu-texture" src="/ui/menu_buttons/treasury/normal.png" data-normal="/ui/menu_buttons/treasury/normal.png" data-active="/ui/menu_buttons/treasury/active.png" data-disabled="/ui/menu_buttons/treasury/disabled.png" alt="Казна" draggable="false"></button>
+<button class="home-asset-button texture-population" data-texture-button onclick="showPopulation()" aria-label="Населення"><img class="menu-texture" src="/ui/menu_buttons/population/normal.png" data-normal="/ui/menu_buttons/population/normal.png" data-active="/ui/menu_buttons/population/active.png" data-disabled="/ui/menu_buttons/population/disabled.png" alt="Населення" draggable="false"></button>
+<button class="home-asset-button texture-quests" data-texture-button onclick="showQuests()" aria-label="Завдання"><img class="menu-texture" src="/ui/menu_buttons/quests/normal.png" data-normal="/ui/menu_buttons/quests/normal.png" data-active="/ui/menu_buttons/quests/active.png" data-disabled="/ui/menu_buttons/quests/disabled.png" alt="Завдання" draggable="false"></button>
+<button class="home-asset-button texture-diplomacy" data-texture-button onclick="showDiplomacy()" aria-label="Дипломатія"><img class="menu-texture" src="/ui/menu_buttons/diplomacy/normal.png" data-normal="/ui/menu_buttons/diplomacy/normal.png" data-active="/ui/menu_buttons/diplomacy/active.png" data-disabled="/ui/menu_buttons/diplomacy/disabled.png" alt="Дипломатія" draggable="false"></button>
+<button class="home-asset-button texture-market" data-texture-button onclick="showTrade()" aria-label="Ринок"><img class="menu-texture" src="/ui/menu_buttons/market/normal.png" data-normal="/ui/menu_buttons/market/normal.png" data-active="/ui/menu_buttons/market/active.png" data-disabled="/ui/menu_buttons/market/disabled.png" alt="Ринок" draggable="false"></button>
+<button class="home-asset-button texture-buildings" data-texture-button onclick="showConstruction()" aria-label="Будівлі"><img class="menu-texture" src="/ui/menu_buttons/buildings/normal.png" data-normal="/ui/menu_buttons/buildings/normal.png" data-active="/ui/menu_buttons/buildings/active.png" data-disabled="/ui/menu_buttons/buildings/disabled.png" alt="Будівлі" draggable="false"></button>
+<button class="home-asset-button texture-technology" data-texture-button onclick="showTechnology()" aria-label="Технології"><img class="menu-texture" src="/ui/menu_buttons/technology/normal.png" data-normal="/ui/menu_buttons/technology/normal.png" data-active="/ui/menu_buttons/technology/active.png" data-disabled="/ui/menu_buttons/technology/disabled.png" alt="Технології" draggable="false"></button>
+<button class="home-asset-button texture-contracts" data-texture-button onclick="showContracts()" aria-label="Контракти"><img class="menu-texture" src="/ui/menu_buttons/contracts/normal.png" data-normal="/ui/menu_buttons/contracts/normal.png" data-active="/ui/menu_buttons/contracts/active.png" data-disabled="/ui/menu_buttons/contracts/disabled.png" alt="Контракти" draggable="false"></button>
+<button class="home-asset-button texture-expeditions" data-texture-button onclick="showExpeditions()" aria-label="Дослідження"><img class="menu-texture" src="/ui/menu_buttons/expeditions/normal.png" data-normal="/ui/menu_buttons/expeditions/normal.png" data-active="/ui/menu_buttons/expeditions/active.png" data-disabled="/ui/menu_buttons/expeditions/disabled.png" alt="Дослідження" draggable="false"></button>
+</div><section class="news-card"><div class="news-heading"><span>📜</span><div><small>КОРОЛІВСЬКІ ХРОНІКИ</small><h3>Стан держави</h3></div></div><p>${b?`Триває будівництво: ${esc(b.name)}.`:'Твоє королівство готове до розвитку. Призначай робітників, розбудовуй міста й посилюй військо.'}</p><button class="subtle-action" onclick="showMessages()">Відкрити хроніки <span>›</span></button></section></div>`;wireTextureButtons()}
+function setActiveTab(tab){document.querySelectorAll('#bottomNav button').forEach(b=>{const active=b.dataset.tab===tab;b.classList.toggle('active',active);const img=b.querySelector('img[data-normal]');if(img)img.src=active?img.dataset.active:img.dataset.normal})}
+function wireTextureButtons(){document.querySelectorAll('[data-texture-button] .menu-texture').forEach(img=>{const btn=img.closest('button');if(!btn||btn.dataset.textureWired)return;btn.dataset.textureWired='1';const normal=()=>{img.src=btn.disabled?img.dataset.disabled:img.dataset.normal};const active=()=>{if(!btn.disabled)img.src=img.dataset.active};btn.addEventListener('pointerdown',active);['pointerup','pointercancel','pointerleave','blur'].forEach(ev=>btn.addEventListener(ev,normal));btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){active()}});btn.addEventListener('keyup',normal)})}
+
 
 function showComingSoon(title,description){nav(title,`<div class="card"><p>${description}</p><p style="color:#d7ad52">Цей розділ поки що є частиною інтерфейсу v0.9. Ігрові механіки для нього будуть додані в наступних оновленнях.</p></div>`);}
 function showQuests(){showComingSoon('📜 Завдання','Тут з’являться щоденні та королівські завдання.');}
@@ -71,12 +73,41 @@ const FLAG_EMBLEMS=[
  ['crossed_swords','Схрещені мечі','⚔'],['axe','Бойова сокира','†'],['helmet','Шолом лицаря','♙'],['bow','Лук зі стрілою','➶'],['sword','Один меч','†'],['shield','Щит','◇'],['spear','Спис','↑'],
  ['sceptre','Королівський скіпетр','♜'],['cross','Геральдичний хрест','✚'],['fleurdelis','Лілія','⚜'],['throne','Королівський трон','♜'],['double_crown','Дві корони','♛'],
  ['tower','Вежа','▥'],['moon','Місяць','☾'],['rose','Троянда','✿'],['castle','Замок','♜'],['sun','Сонце','☼'],['oak','Дуб','♣'],
+ ['crest_01','Сонце у щиті','◇'],
+ ['crest_02','Замок у щиті','◇'],
+ ['crest_03','Троянда у щиті','◇'],
+ ['crest_04','Місяць і зоря','◇'],
+ ['crest_05','Вежі у щиті','◇'],
+ ['crest_06','Червоний геральдичний символ','◇'],
+ ['crest_07','Хрест у щиті','◇'],
+ ['crest_08','Золота лілія','◇'],
+ ['crest_09','Срібний хрест','◇'],
+ ['crest_10','Фіолетова лілія','◇'],
+ ['crest_11','Корона у щиті','◇'],
+ ['crest_12','Синя лілія','◇'],
+ ['crest_13','Меч у щиті','◇'],
+ ['crest_14','Порожній щит','◇'],
+ ['crest_15','Шолом лицаря','◇'],
+ ['crest_16','Сокира у щиті','◇'],
+ ['crest_17','Орел у щиті','◇'],
+ ['crest_18','Лисиця у щиті','◇'],
+ ['crest_19','Змія у щиті','◇'],
+ ['crest_20','Кінь у щиті','◇'],
+ ['crest_21','Ведмідь у щиті','◇'],
+ ['crest_22','Олень у щиті','◇'],
+ ['crest_23','Вовк у щиті','◇'],
+ ['crest_24','Дракон у щиті','◇'],
+ ['crest_25','Лев у щиті','◇'],
+ ['crest_26','Срібний орел','◇'],
+ ['crest_27','Дуб у щиті','◇'],
+ ['crest_28','Дуб і листя','◇'],
+ ['crest_29','Схрещені мечі у щиті','◇'],
  ['royal_shield_01','Скіпетр у щиті','♜'],['royal_shield_02','Геральдичний хрест','✚'],['royal_shield_03','Срібний щит','◇'],['royal_shield_04','Подвійна корона','♛'],['royal_shield_05','Лев у щиті','♌'],['royal_shield_06','Місяць і зорі','☾'],['royal_shield_07','Королівська корона','♛'],['royal_shield_08','Замок у щиті','♜'],['royal_shield_09','Дуб у щиті','♣'],['royal_shield_10','Королівський трон','♜'],['royal_shield_11','Лук у щиті','➶'],['royal_shield_12','Троянда у щиті','✿'],['royal_shield_13','Спис у щиті','↑'],['royal_shield_14','Сонце і зорі','☼'],['royal_shield_15','Лілія у щиті','⚜']
 ];
 const FLAG_BORDERS=[['gold','Золота'],['silver','Срібна'],['black','Чорна'],['none','Без рамки']];
 const FLAG_PATTERNS=[['plain','Однотонний'],['diagonal','Діагоналі'],['quartered','Поділ на 4'],['stripe','Смуги'],['cross','Хрест']];
-const FLAG_IMAGE_EMBLEMS=new Set(['eagle','fox','griffin','snake','bear','axe','dragon','crossed_swords','horse','lion','wolf','stag','helmet',...Array.from({length:15},(_,i)=>`royal_shield_${String(i+1).padStart(2,'0')}`)]);
-function emblemImage(id,mini=false){return FLAG_IMAGE_EMBLEMS.has(id)?`<img class="emblem-image ${mini?'mini':''} ${id.startsWith('royal_shield_')?'royal-shield-emblem':''}" src="heralds/${id.startsWith('royal_shield_')?'royal-shields/':''}${id}.png" alt="" loading="lazy">`:null}
+const FLAG_IMAGE_EMBLEMS=new Set(['eagle','fox','griffin','snake','bear','axe','dragon','crossed_swords','horse','lion','wolf','stag','helmet',...Array.from({length:29},(_,i)=>`crest_${String(i+1).padStart(2,'0')}`),...Array.from({length:15},(_,i)=>`royal_shield_${String(i+1).padStart(2,'0')}`)]);
+function emblemImage(id,mini=false){return FLAG_IMAGE_EMBLEMS.has(id)?`<img class="emblem-image ${mini?'mini':''} ${id.startsWith('royal_shield_')?'royal-shield-emblem':''}" src="/heralds/${id}.png" alt="" loading="lazy">`:null}
 let flagDraft=null;
 function defaultFlag(){return {shape:'swallowtail',color:'#b91c1c',secondary:'#d4af37',emblem:'lion',border:'gold',pattern:'plain'}}
 function currentFlag(){return {...defaultFlag(),...(state?.flag||{})}}

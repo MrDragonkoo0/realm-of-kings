@@ -145,3 +145,76 @@ body{padding:0 0 calc(76px + env(safe-area-inset-bottom));background:radial-grad
 .flag-art .royal-shield-emblem{width:88px;height:110px;object-fit:contain}
 .flag-mini .royal-shield-emblem{width:29px;height:35px;object-fit:contain}
 @media(max-width:390px){#game{padding:10px 10px 16px}.asset-home-grid{gap:7px}.home-asset-button{min-height:65px;padding:9px 8px;gap:7px}.menu-card-icon{flex-basis:32px;width:32px;height:34px;font-size:23px}.menu-card-label{font-size:13px}.option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.herald-option{min-height:116px}#bottomNav button small{font-size:9px}}
+
+/* ROK v0.9.2 — use the actual illustrated menu textures */
+.asset-home-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+.home-asset-button {
+  display: block !important;
+  width: 100%;
+  min-width: 0;
+  min-height: 0 !important;
+  height: auto;
+  aspect-ratio: 296 / 91;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  background-image: var(--normal) !important;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: none !important;
+  text-align: initial;
+  transition: filter .12s ease, transform .12s ease;
+}
+.home-asset-button .menu-card-icon,
+.home-asset-button .menu-card-label {
+  display: none !important;
+}
+.home-asset-button:active,
+.home-asset-button:focus-visible {
+  background-image: var(--active) !important;
+  transform: scale(.985);
+  filter: brightness(1.08);
+}
+.home-asset-button:focus-visible {
+  outline: 2px solid #f1d58d;
+  outline-offset: 1px;
+}
+@media (max-width: 390px) {
+  .asset-home-grid { gap: 5px; }
+}
+
+
+/* ROK v0.9.3 — real texture images, independent of older theme overrides */
+#game .asset-home-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+#game .asset-home-grid .home-asset-button {
+  display:flex !important; align-items:center; justify-content:center;
+  width:100%; min-width:0; min-height:0 !important; height:auto;
+  aspect-ratio:296 / 91; padding:0 !important; margin:0;
+  border:0 !important; border-radius:0 !important;
+  background:transparent !important; box-shadow:none !important;
+  overflow:hidden; line-height:0; transition:transform .12s ease,filter .12s ease;
+}
+#game .asset-home-grid .home-asset-button::before { display:none !important; content:none !important; }
+#game .asset-home-grid .home-asset-button .menu-texture {
+  display:block !important; width:100% !important; height:100% !important;
+  object-fit:fill; margin:0; padding:0; border:0; border-radius:0;
+  background:transparent; pointer-events:none; user-select:none;
+}
+#game .asset-home-grid .home-asset-button:active { transform:scale(.985); filter:brightness(1.08); }
+#bottomNav { grid-template-columns:repeat(5,minmax(0,1fr)); }
+#bottomNav button { display:flex; align-items:center; justify-content:center; min-width:0; min-height:54px; padding:2px !important; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none !important; overflow:hidden; }
+#bottomNav button img { display:block; width:100%; height:auto; max-height:58px; object-fit:contain; margin:0; padding:0; border:0; background:transparent; }
+#bottomNav button.active { background:transparent !important; filter:drop-shadow(0 0 4px #d6a84155); }
+@media(max-width:390px) { #game .asset-home-grid {gap:5px} #bottomNav button img {max-height:52px} }
+
+
+/* ROK v0.9.4 — imported individual illustrated button textures */
+#game .asset-home-grid .home-asset-button { aspect-ratio: 4.15 / 1; }
+#game .asset-home-grid .home-asset-button .menu-texture { object-fit: contain; }
+#bottomNav button img { width: 100%; height: auto; max-height: 52px; object-fit: contain; }
+.herald-option .emblem-image { object-fit: contain; }
