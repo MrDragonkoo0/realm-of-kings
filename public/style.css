@@ -17,3 +17,39 @@ h1{text-align:center;font-size:24px;margin:7px 0 14px}
 p{font-size:16px;margin:8px 0}hr{border:0;border-top:1px solid #735827;margin:15px 0}
 .error{padding:12px;border:1px solid #8d6b32;background:#171a20;border-radius:10px;text-align:center}
 @media(max-width:600px){body{padding:7px}h1{font-size:22px}.menu{gap:7px}.menu button{min-height:50px;font-size:14px}}
+
+/* ROK v0.6 — flag editor */
+.card{background:#171a20;border:1px solid #735827;border-radius:12px;padding:12px;margin:9px 0;text-align:left}
+.flag-panel{background:#171a20;border:1px solid #8d6b32;border-radius:14px;padding:12px;margin:10px 0}
+.flag-preview-wrap{display:flex;justify-content:center;align-items:center;min-height:190px;background:#0d1015;border-radius:10px;margin:10px 0;padding:18px}
+.flag-art{position:relative;display:flex;align-items:center;justify-content:center;width:150px;height:170px;overflow:hidden;background:var(--flag);border:5px solid var(--border);box-shadow:0 5px 15px #0009;color:var(--secondary);}
+.flag-art.rectangle{height:105px;width:165px}
+.flag-art.triangle{clip-path:polygon(0 0,100% 0,50% 100%);border:0;outline:0;padding-bottom:20px}
+.flag-art.swallowtail{clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);padding-bottom:20px}
+.flag-art.vertical{clip-path:polygon(15% 0,85% 0,85% 100%,50% 88%,15% 100%);padding-bottom:20px}
+.flag-art.shield{clip-path:polygon(0 0,100% 0,100% 62%,50% 100%,0 62%);padding-bottom:18px}
+.flag-art.pattern-diagonal:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 19px,var(--secondary) 20px 25px,transparent 26px 43px);opacity:.48}
+.flag-art.pattern-quartered:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 49%,var(--secondary) 49% 52%,transparent 52%),linear-gradient(0deg,transparent 49%,var(--secondary) 49% 52%,transparent 52%);opacity:.7}
+.flag-art.pattern-stripe:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 28px,var(--secondary) 29px 34px);opacity:.55}
+.flag-art.pattern-cross:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 40%,var(--secondary) 40% 60%,transparent 60%),linear-gradient(0deg,transparent 40%,var(--secondary) 40% 60%,transparent 60%);opacity:.75}
+.flag-art .emblem-glyph{position:relative;z-index:1;font-family:Georgia,'Times New Roman',serif;font-size:76px;font-weight:bold;line-height:1;text-shadow:1px 2px 2px #0008;color:var(--secondary);}
+.flag-art.rectangle .emblem-glyph{font-size:66px}
+.flag-art .flag-ribbon{position:absolute;inset:5px;border:2px solid transparent;pointer-events:none}
+.flag-art.border-gold{--border:#d4af37}.flag-art.border-silver{--border:#cbd5e1}.flag-art.border-black{--border:#111827}.flag-art.border-none{border-color:transparent;box-shadow:none}
+.flag-art.border-none .flag-ribbon{border-color:transparent}
+.flag-art.border-gold .flag-ribbon{border-color:#d4af37}.flag-art.border-silver .flag-ribbon{border-color:#cbd5e1}.flag-art.border-black .flag-ribbon{border-color:#111827}
+.option-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0}
+.option-btn{padding:8px 5px;min-height:43px;font-size:13px;border-width:1px}
+.option-btn.selected{border:2px solid #f6d365;background:#42351d;box-shadow:0 0 0 1px #f6d36555}
+.color-chip{display:inline-block;width:17px;height:17px;border-radius:50%;border:1px solid #ffffff99;vertical-align:middle;margin-right:5px}
+.flag-mini{display:inline-flex;align-items:center;justify-content:center;width:31px;height:39px;margin-right:8px;border:2px solid var(--border);background:var(--flag);color:var(--secondary);font-family:Georgia,serif;font-size:21px;font-weight:bold;vertical-align:middle;clip-path:polygon(0 0,100% 0,100% 100%,50% 80%,0 100%)}
+.flag-mini.rectangle{height:24px;width:38px;clip-path:none}.flag-mini.triangle{clip-path:polygon(0 0,100% 0,50% 100%)}.flag-mini.vertical{clip-path:polygon(15% 0,85% 0,85% 100%,50% 85%,15% 100%)}.flag-mini.shield{clip-path:polygon(0 0,100% 0,100% 65%,50% 100%,0 65%)}
+.flag-mini.pattern-diagonal{background:repeating-linear-gradient(135deg,var(--flag) 0 6px,var(--secondary) 7px 9px)}
+.flag-mini.pattern-quartered{background:linear-gradient(90deg,var(--flag) 0 48%,var(--secondary) 49% 52%,var(--flag) 53%)}
+.flag-mini.pattern-stripe{background:repeating-linear-gradient(0deg,var(--flag) 0 7px,var(--secondary) 8px 10px)}
+.flag-mini.pattern-cross{background:linear-gradient(90deg,var(--flag) 0 35%,var(--secondary) 36% 64%,var(--flag) 65%),linear-gradient(0deg,transparent 0 35%,var(--secondary) 36% 64%,transparent 65%)}
+.flag-section-title{color:#e8bd55;margin:15px 0 5px;font-size:16px}
+@media(max-width:380px){.option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.flag-art{transform:scale(.9)}}
+.emblem-svg{position:relative;z-index:1;width:78%;height:78%;filter:drop-shadow(1px 2px 1px #0008);overflow:visible}
+.flag-mini .emblem-svg{width:86%;height:86%;filter:none}
+.flag-art.pattern-diagonal:before,.flag-art.pattern-quartered:before,.flag-art.pattern-stripe:before,.flag-art.pattern-cross:before{z-index:0}
