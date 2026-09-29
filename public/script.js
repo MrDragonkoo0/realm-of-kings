@@ -41,7 +41,7 @@ function wireTextureButtons(){
   window.addEventListener('touchend',resetAll);
   window.addEventListener('pointercancel',resetAll);
  }
-};const active=()=>{if(!btn.disabled)img.src=img.dataset.active};btn.addEventListener('pointerdown',active);['pointerup','pointercancel','pointerleave','blur'].forEach(ev=>btn.addEventListener(ev,normal));btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){active()}});btn.addEventListener('keyup',normal)})}
+}
 
 
 function showComingSoon(title,description){nav(title,`<div class="card"><p>${description}</p><p style="color:#d7ad52">Цей розділ поки що є частиною інтерфейсу v0.9. Ігрові механіки для нього будуть додані в наступних оновленнях.</p></div>`);}
