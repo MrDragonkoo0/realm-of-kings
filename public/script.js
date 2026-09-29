@@ -20,7 +20,28 @@ function showKingdom(){const s=state,b=s.building,r=s.resources||{};const num=v=
 <button class="home-asset-button texture-expeditions" data-texture-button onclick="showExpeditions()" aria-label="Дослідження"><img class="menu-texture" src="ui/menu_buttons/expeditions_normal.png" data-normal="ui/menu_buttons/expeditions_normal.png" data-active="ui/menu_buttons/expeditions_active.png" data-disabled="ui/menu_buttons/expeditions_disabled.png" alt="Дослідження" draggable="false" onerror="this.hidden=true;this.parentElement.classList.add('asset-fallback')"></button>
 </div><section class="news-card"><div class="news-heading"><span>📜</span><div><small>КОРОЛІВСЬКІ ХРОНІКИ</small><h3>Стан держави</h3></div></div><p>${b?`Триває будівництво: ${esc(b.name)}.`:'Твоє королівство готове до розвитку. Призначай робітників, розбудовуй міста й посилюй військо.'}</p><button class="subtle-action" onclick="showMessages()">Відкрити хроніки <span>›</span></button></section></div>`;wireTextureButtons()}
 function setActiveTab(tab){document.querySelectorAll('#bottomNav button').forEach(b=>{const active=b.dataset.tab===tab;b.classList.toggle('active',active);const img=b.querySelector('img[data-normal]');if(img)img.src=active?img.dataset.active:img.dataset.normal})}
-function wireTextureButtons(){document.querySelectorAll('[data-texture-button] .menu-texture').forEach(img=>{const btn=img.closest('button');if(!btn||btn.dataset.textureWired)return;btn.dataset.textureWired='1';const normal=()=>{img.src=btn.disabled?img.dataset.disabled:img.dataset.normal};const active=()=>{if(!btn.disabled)img.src=img.dataset.active};btn.addEventListener('pointerdown',active);['pointerup','pointercancel','pointerleave','blur'].forEach(ev=>btn.addEventListener(ev,normal));btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){active()}});btn.addEventListener('keyup',normal)})}
+function wireTextureButtons(){
+ document.querySelectorAll('[data-texture-button] .menu-texture').forEach(img=>{
+  const btn=img.closest('button');
+  if(!btn||btn.dataset.textureWired)return;
+  btn.dataset.textureWired='1';
+  const normal=()=>{img.src=btn.disabled?img.dataset.disabled:img.dataset.normal};
+  const active=()=>{if(!btn.disabled)img.src=img.dataset.active};
+  normal();
+  btn.addEventListener('pointerdown',active);
+  ['pointerup','pointercancel','pointerleave','blur','touchend','touchcancel','click','keyup'].forEach(ev=>btn.addEventListener(ev,normal));
+  btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){active()}});
+ });
+ if(!window.__rokTextureResetBound){
+  window.__rokTextureResetBound=true;
+  const resetAll=()=>document.querySelectorAll('[data-texture-button] .menu-texture').forEach(img=>{
+   const btn=img.closest('button');if(btn)img.src=btn.disabled?img.dataset.disabled:img.dataset.normal;
+  });
+  window.addEventListener('pointerup',resetAll);
+  window.addEventListener('touchend',resetAll);
+  window.addEventListener('pointercancel',resetAll);
+ }
+};const active=()=>{if(!btn.disabled)img.src=img.dataset.active};btn.addEventListener('pointerdown',active);['pointerup','pointercancel','pointerleave','blur'].forEach(ev=>btn.addEventListener(ev,normal));btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){active()}});btn.addEventListener('keyup',normal)})}
 
 
 function showComingSoon(title,description){nav(title,`<div class="card"><p>${description}</p><p style="color:#d7ad52">Цей розділ поки що є частиною інтерфейсу v0.9. Ігрові механіки для нього будуть додані в наступних оновленнях.</p></div>`);}

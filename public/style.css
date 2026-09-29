@@ -236,3 +236,74 @@ body{padding:0 0 calc(76px + env(safe-area-inset-bottom));background:radial-grad
 #game .asset-home-grid .home-asset-button .menu-texture { width:100% !important; height:100% !important; object-fit:fill !important; }
 #bottomNav button { min-height:54px; }
 #bottomNav button img { display:block; width:100%; height:auto; max-height:58px; object-fit:contain; }
+
+
+/* ROK v0.9.8 — consistent menu textures and mobile navigation */
+#game .asset-home-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+#game .asset-home-grid .home-asset-button {
+  display: block !important;
+  position: relative;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  aspect-ratio: 4.1 / 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#game .asset-home-grid .home-asset-button .menu-texture {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+#bottomNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+#bottomNav button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 56px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 2px !important;
+  margin: 0 !important;
+  overflow: hidden;
+  background: transparent;
+}
+#bottomNav button img {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 56px !important;
+  object-fit: contain !important;
+  margin: 0 auto;
+}
+@media (max-width: 380px) {
+  #game .asset-home-grid { gap: 6px !important; }
+  #bottomNav { gap: 2px; padding-left: 4px; padding-right: 4px; }
+  #bottomNav button { min-height: 48px !important; }
+  #bottomNav button img { max-height: 48px !important; }
+}
