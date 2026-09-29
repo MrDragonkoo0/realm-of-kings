@@ -1,2 +1,2 @@
-Realm of Kings v0.8
-Telegram Mini App home UI redesign based on the approved mobile mockup.
+Realm of Kings v0.9
+Telegram Mini App UI textures + 44 herald options

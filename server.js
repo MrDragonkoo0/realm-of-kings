@@ -191,7 +191,7 @@ app.post('/api/register',(req,res)=>{try{const id=getUserId(req),kingdom=String(
 
 const FLAG_SHAPES=new Set(['rectangle','swallowtail','triangle','vertical','shield']);
 const FLAG_COLORS=new Set(['#b91c1c','#1d4ed8','#047857','#111827','#f8fafc','#d4af37','#7e22ce','#c2410c','#0f766e','#4d7c0f','#7f1d1d','#334155']);
-const FLAG_EMBLEMS=new Set(['lion','eagle','dragon','crown','wolf','stag','bear','horse','snake','fox','griffin','crossed_swords','axe','helmet','bow','sword','shield','spear','sceptre','cross','fleurdelis','throne','double_crown','tower','moon','rose','castle','sun','oak']);
+const FLAG_EMBLEMS=new Set(['lion','eagle','dragon','crown','wolf','stag','bear','horse','snake','fox','griffin','crossed_swords','axe','helmet','bow','sword','shield','spear','sceptre','cross','fleurdelis','throne','double_crown','tower','moon','rose','castle','sun','oak',...Array.from({length:15},(_,i)=>`royal_shield_${String(i+1).padStart(2,'0')}`)]);
 const FLAG_BORDERS=new Set(['none','gold','silver','black']);
 const FLAG_PATTERNS=new Set(['plain','diagonal','quartered','stripe','cross']);
 app.post('/api/flag',(req,res)=>{try{
