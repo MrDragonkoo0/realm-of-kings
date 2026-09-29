@@ -37,7 +37,7 @@ async function refresh(){try{state=await api('/api/state');const h=document.quer
 boot();
 
 
-// ROK v0.6 — client-side heraldic flag editor. Emblems are typographic heraldic marks, not emoji.
+// ROK v0.7 — illustrated herald assets with vector fallback for the remaining emblems.
 const FLAG_SHAPES=[['rectangle','Прямокутний'],['swallowtail','Роздвоєний'],['triangle','Трикутний'],['vertical','Вертикальний'],['shield','Щитоподібний']];
 const FLAG_COLORS=[['#b91c1c','Червоний'],['#1d4ed8','Синій'],['#047857','Зелений'],['#111827','Чорний'],['#f8fafc','Білий'],['#d4af37','Золотий'],['#7e22ce','Фіолетовий'],['#c2410c','Помаранчевий'],['#0f766e','Бірюзовий'],['#4d7c0f','Оливковий'],['#7f1d1d','Бордовий'],['#334155','Сланцевий']];
 const FLAG_EMBLEMS=[
@@ -48,6 +48,8 @@ const FLAG_EMBLEMS=[
 ];
 const FLAG_BORDERS=[['gold','Золота'],['silver','Срібна'],['black','Чорна'],['none','Без рамки']];
 const FLAG_PATTERNS=[['plain','Однотонний'],['diagonal','Діагоналі'],['quartered','Поділ на 4'],['stripe','Смуги'],['cross','Хрест']];
+const FLAG_IMAGE_EMBLEMS=new Set(['eagle','fox','griffin','snake','bear','axe','dragon','crossed_swords','horse','lion','wolf','stag','helmet']);
+function emblemImage(id,mini=false){return FLAG_IMAGE_EMBLEMS.has(id)?`<img class="emblem-image ${mini?'mini':''}" src="heralds/${id}.png" alt="" loading="lazy">`:null}
 let flagDraft=null;
 function defaultFlag(){return {shape:'swallowtail',color:'#b91c1c',secondary:'#d4af37',emblem:'lion',border:'gold',pattern:'plain'}}
 function currentFlag(){return {...defaultFlag(),...(state?.flag||{})}}
@@ -89,7 +91,7 @@ function emblemSvg(id,color){
  return start+(shapes[id]||shapes.shield).replaceAll('currentColor',color)+end;
 }
 
-function flagMarkup(f,mini=false){f={...defaultFlag(),...(f||{})};const e=FLAG_EMBLEMS.find(x=>x[0]===f.emblem)||FLAG_EMBLEMS[0];const borderColor=f.border==='silver'?'#cbd5e1':f.border==='black'?'#111827':f.border==='none'?'transparent':'#d4af37';return `<div class="${mini?'flag-mini':'flag-art'} ${esc(f.shape)} border-${esc(f.border)} pattern-${esc(f.pattern)}" style="--flag:${esc(f.color)};--secondary:${esc(f.secondary)};--border:${borderColor}" aria-label="Прапор: ${esc(e[1])}">${emblemSvg(e[0],f.secondary)}${mini?'':'<span class="flag-ribbon"></span>'}</div>`}
+function flagMarkup(f,mini=false){f={...defaultFlag(),...(f||{})};const e=FLAG_EMBLEMS.find(x=>x[0]===f.emblem)||FLAG_EMBLEMS[0];const borderColor=f.border==='silver'?'#cbd5e1':f.border==='black'?'#111827':f.border==='none'?'transparent':'#d4af37';const img=emblemImage(e[0],mini);return `<div class="${mini?'flag-mini':'flag-art'} ${esc(f.shape)} border-${esc(f.border)} pattern-${esc(f.pattern)}" style="--flag:${esc(f.color)};--secondary:${esc(f.secondary)};--border:${borderColor}" aria-label="Прапор: ${esc(e[1])}">${img||emblemSvg(e[0],f.secondary)}${mini?'':'<span class="flag-ribbon"></span>'}</div>`}
 function optionButtons(items,selected,onClick,kind=''){return `<div class="option-grid">${items.map(x=>`<button class="option-btn ${selected===x[0]?'selected':''}" onclick="${onClick}('${x[0]}')">${kind==='color'?`<span class="color-chip" style="background:${x[0]};${x[0]==='#f8fafc'?'border-color:#888':''}"></span>`:''}${esc(x[1])}</button>`).join('')}</div>`}
 function showFlagEditor(){flagDraft={...currentFlag()};renderFlagEditor()}
 function setFlag(key,value){flagDraft[key]=value;renderFlagEditor()}
@@ -99,7 +101,7 @@ function renderFlagEditor(){
  <div class="flag-panel"><div class="flag-section-title">1. Форма полотна</div>${optionButtons(FLAG_SHAPES,f.shape,'flagShape')}
  <div class="flag-section-title">2. Основний колір</div>${optionButtons(FLAG_COLORS,f.color,'flagColor','color')}
  <div class="flag-section-title">3. Колір герба та візерунка</div>${optionButtons(FLAG_COLORS,f.secondary,'flagSecondary','color')}
- <div class="flag-section-title">4. Герб — ${FLAG_EMBLEMS.length} символів</div><div class="option-grid">${FLAG_EMBLEMS.map(x=>`<button class="option-btn ${f.emblem===x[0]?'selected':''}" onclick="setFlag('emblem','${x[0]}')"><span style="display:block;font: bold 25px Georgia,serif;color:${f.secondary}">${esc(x[2])}</span>${esc(x[1])}</button>`).join('')}</div>
+ <div class="flag-section-title">4. Герб — ${FLAG_EMBLEMS.length} символів</div><div class="option-grid">${FLAG_EMBLEMS.map(x=>`<button class="option-btn herald-option ${f.emblem===x[0]?'selected':''}" onclick="setFlag('emblem','${x[0]}')">${emblemImage(x[0])||`<span class="herald-glyph" style="color:${f.secondary}">${esc(x[2])}</span>`}<span>${esc(x[1])}</span></button>`).join('')}</div>
  <div class="flag-section-title">5. Рамка</div>${optionButtons(FLAG_BORDERS,f.border,'flagBorder')}
  <div class="flag-section-title">6. Візерунок полотна</div>${optionButtons(FLAG_PATTERNS,f.pattern,'flagPattern')}
  <button style="width:100%;margin-top:7px" onclick="saveFlag()">💾 Зберегти прапор</button><button style="width:100%;margin-top:7px" onclick="resetFlag()">↺ Скинути налаштування</button><button style="width:100%;margin-top:7px" onclick="showKingdom()">⬅️ Назад без змін</button></div>`;
