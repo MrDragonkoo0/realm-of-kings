@@ -1,2 +1,5 @@
-Realm of Kings v0.9.7
-Heralds cleaned: only the 29 user-supplied herald images remain; legacy saved emblem IDs are mapped to the new names.
+Realm of Kings v0.9.8
+- Stabilized menu texture reset on touch/pointer events.
+- Fixed griffin herald image mapping.
+- Added mobile navigation sizing override and cache busting.
+- Keeps existing SQLite configuration and data path unchanged.
