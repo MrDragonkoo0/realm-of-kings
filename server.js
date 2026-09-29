@@ -74,7 +74,7 @@ const ALL_PLAYER_COLUMNS = [
  ['market_level','INTEGER NOT NULL DEFAULT 1'],['walls_level','INTEGER NOT NULL DEFAULT 1'],
  ['gate_level','INTEGER NOT NULL DEFAULT 1'],['field_count','INTEGER NOT NULL DEFAULT 0'],
  ['last_tax_at','INTEGER NOT NULL DEFAULT 0'],['last_gather_at','INTEGER NOT NULL DEFAULT 0'],
- ['building_type','TEXT'],['building_ends_at','INTEGER'],
+ ['building_type','TEXT'],['building_ends_at','INTEGER'],['flag_json','TEXT'],
  ['created_at','INTEGER NOT NULL DEFAULT (strftime(\'%s\',\'now\'))'],
  ['sawmill','INTEGER NOT NULL DEFAULT 0'],['mine','INTEGER NOT NULL DEFAULT 0'],
  ['woodcutters','INTEGER NOT NULL DEFAULT 0'],['miners','INTEGER NOT NULL DEFAULT 0'],
@@ -163,7 +163,8 @@ function publicUser(r){
  const remaining=r.building_type&&r.building_ends_at?Math.max(0,Math.ceil(r.building_ends_at-Date.now()/1000)):0;
  const capacity=Math.max(10,r.houses*10 + r.townhall_level*20);
  const defense=r.walls_level*20+r.gate_level*15+r.military_power;
- return {registered:!!r.kingdom_name,kingdom:r.kingdom_name||'',ruler:r.ruler_name||'',level:r.level,xp:r.xp,population:r.population,populationCapacity:capacity,gold:r.gold,gems:r.gems,cities:r.cities,villages:r.villages,houses:r.houses,militaryPower:r.military_power,defense,fieldCount:r.field_count,
+ let flag={shape:'swallowtail',color:'#b91c1c',secondary:'#d4af37',emblem:'lion',border:'gold',pattern:'plain'};try{if(r.flag_json)flag={...flag,...JSON.parse(r.flag_json)}}catch(_){}
+ return {registered:!!r.kingdom_name,kingdom:r.kingdom_name||'',ruler:r.ruler_name||'',flag,level:r.level,xp:r.xp,population:r.population,populationCapacity:capacity,gold:r.gold,gems:r.gems,cities:r.cities,villages:r.villages,houses:r.houses,militaryPower:r.military_power,defense,fieldCount:r.field_count,
  buildings:{house:r.houses,smithy:r.smithy,farm:r.farm,stable:r.stable,barracks:r.barracks,range:r.range,temple:r.temple,bakery:r.bakery,workshop:r.workshop,hospital:r.hospital,sawmill:r.sawmill,mine:r.mine},
  workers:{woodcutters:r.woodcutters,miners:r.miners,free:Math.max(0,r.population-r.woodcutters-r.miners)},
  extraction:{woodcutters:r.woodcutters,miners:r.miners,sawmill:r.sawmill,mine:r.mine},
@@ -187,6 +188,20 @@ function deduct(id,cost){ const sets=[],vals=[]; for(const [k,v] of Object.entri
 app.get('/api/state',(req,res)=>{try{const p=currentPlayer(getUserId(req));if(!p)return res.json({registered:false});res.json(publicUser(p));}catch(e){res.status(401).json({error:e.message});}});
 app.get('/api/me',(req,res)=>{try{const p=currentPlayer(getUserId(req));res.json(p?publicUser(p):{registered:false});}catch(e){res.status(401).json({error:e.message});}});
 app.post('/api/register',(req,res)=>{try{const id=getUserId(req),kingdom=String(req.body.kingdom||'').trim(),ruler=String(req.body.ruler||'').trim();if(!kingdom||!ruler)return res.status(400).json({error:'Заповни обидва поля'});if(kingdom.length>32||ruler.length>32)return res.status(400).json({error:'Максимум 32 символи'});let p=getPlayer(id);if(!p){db.prepare('INSERT INTO players(telegram_id,kingdom_name,ruler_name,gold,cities,sawmill,mine) VALUES(?,?,?,100,1,1,1)').run(id,kingdom,ruler);p=getPlayer(id);}res.json(publicUser(p));}catch(e){res.status(400).json({error:e.message});}});
+
+const FLAG_SHAPES=new Set(['rectangle','swallowtail','triangle','vertical','shield']);
+const FLAG_COLORS=new Set(['#b91c1c','#1d4ed8','#047857','#111827','#f8fafc','#d4af37','#7e22ce','#c2410c','#0f766e','#4d7c0f','#7f1d1d','#334155']);
+const FLAG_EMBLEMS=new Set(['lion','eagle','dragon','crown','wolf','stag','bear','horse','snake','fox','griffin','crossed_swords','axe','helmet','bow','sword','shield','spear','sceptre','cross','fleurdelis','throne','double_crown','tower','moon','rose','castle','sun','oak']);
+const FLAG_BORDERS=new Set(['none','gold','silver','black']);
+const FLAG_PATTERNS=new Set(['plain','diagonal','quartered','stripe','cross']);
+app.post('/api/flag',(req,res)=>{try{
+ const id=getUserId(req),p=getPlayer(id);if(!p)return res.status(400).json({error:'Спочатку створи королівство'});
+ const f=req.body.flag||{};
+ if(!FLAG_SHAPES.has(f.shape)||!FLAG_COLORS.has(f.color)||!FLAG_COLORS.has(f.secondary)||!FLAG_EMBLEMS.has(f.emblem)||!FLAG_BORDERS.has(f.border)||!FLAG_PATTERNS.has(f.pattern))return res.status(400).json({error:'Невірні параметри прапора'});
+ const flag={shape:f.shape,color:f.color,secondary:f.secondary,emblem:f.emblem,border:f.border,pattern:f.pattern};
+ db.prepare('UPDATE players SET flag_json=? WHERE telegram_id=?').run(JSON.stringify(flag),id);
+ res.json(publicUser(getPlayer(id)));
+}catch(e){res.status(400).json({error:e.message});}});
 
 app.post('/api/build',(req,res)=>{try{const id=getUserId(req),type=String(req.body.type||''),p=currentPlayer(id);if(!BUILDINGS[type])return res.status(400).json({error:'Невідома будівля'});if(!p)return res.status(400).json({error:'Спочатку створи королівство'});if(p.building_type)return res.status(400).json({error:'Зараз уже будується інша будівля'});const cost=BUILDING_COSTS[type];if(!canPay(p,cost))return res.status(400).json({error:'Недостатньо ресурсів'});deduct(id,cost);db.prepare('UPDATE players SET building_type=?,building_ends_at=? WHERE telegram_id=?').run(type,Math.floor(Date.now()/1000)+BUILDINGS[type].seconds,id);res.json(publicUser(currentPlayer(id)));}catch(e){res.status(400).json({error:e.message});}});
 
@@ -216,8 +231,8 @@ app.post('/api/market',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(i
 app.post('/api/train',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(id),type=String(req.body.type||''),t=TROOPS[type];if(!p||!t)return res.status(400).json({error:'Невідомий тип війська'});if(p.barracks<1 && ['swordsmen','shieldmen'].includes(type))return res.status(400).json({error:'Побудуй казарми'});if(p.range<1&&type==='archers')return res.status(400).json({error:'Побудуй стрільбище'});if(p.stable<1&&['cavalry','knights'].includes(type))return res.status(400).json({error:'Побудуй конюшню'});if(!canPay(p,t.cost))return res.status(400).json({error:'Недостатньо ресурсів'});deduct(id,t.cost);db.prepare(`UPDATE players SET ${type}=${type}+1,military_power=military_power+?,xp=xp+4 WHERE telegram_id=?`).run(t.power,id);res.json(publicUser(currentPlayer(id)));}catch(e){res.status(400).json({error:e.message});}});
 
 app.post('/api/village',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(id);if(!p||p.gold<100)return res.status(400).json({error:'Потрібно 100 золота'});db.prepare('UPDATE players SET gold=gold-100,villages=villages+1,population=population+5,xp=xp+5 WHERE telegram_id=?').run(id);res.json(publicUser(currentPlayer(id)));}catch(e){res.status(400).json({error:e.message});}});
-app.get('/api/world',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(id);if(!p)return res.status(400).json({error:'Немає королівства'});const players=db.prepare('SELECT kingdom_name,ruler_name,cities,villages,military_power,population FROM players ORDER BY military_power DESC LIMIT 20').all();res.json({you:p.kingdom_name,players});}catch(e){res.status(400).json({error:e.message});}});
+app.get('/api/world',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(id);if(!p)return res.status(400).json({error:'Немає королівства'});const players=db.prepare('SELECT kingdom_name,ruler_name,cities,villages,military_power,population,flag_json FROM players ORDER BY military_power DESC LIMIT 20').all();res.json({you:p.kingdom_name,players:players.map(x=>{let flag={shape:'swallowtail',color:'#b91c1c',secondary:'#d4af37',emblem:'lion',border:'gold',pattern:'plain'};try{if(x.flag_json)flag={...flag,...JSON.parse(x.flag_json)}}catch(_){}return {...x,flag}})});}catch(e){res.status(400).json({error:e.message});}});
 
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log(`ROK v0.5.1 SQLite server on ${PORT}`));
+app.listen(PORT,()=>console.log(`ROK v0.6 SQLite server on ${PORT}`));
