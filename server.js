@@ -235,4 +235,4 @@ app.get('/api/world',(req,res)=>{try{const id=getUserId(req),p=currentPlayer(id)
 
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log(`ROK v0.6 SQLite server on ${PORT}`));
+app.listen(PORT,()=>console.log(`ROK v0.8 SQLite server on ${PORT}`));

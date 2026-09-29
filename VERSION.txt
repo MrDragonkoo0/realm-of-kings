@@ -1,3 +1,2 @@
-Realm of Kings v0.7
-
-Illustrated herald assets integrated into the flag editor.
+Realm of Kings v0.8
+Telegram Mini App home UI redesign based on the approved mobile mockup.
