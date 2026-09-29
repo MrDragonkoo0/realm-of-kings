@@ -1,5 +1,3 @@
-ROK v0.6
-Редактор прапорів: 29 гербів, 5 форм, 12 кольорів, візерунки та рамки.
-Прапори зберігаються в SQLite на сервері й відображаються в профілі та списку онлайн-світу.
-Міграція БД не видаляє наявні дані.
-Зберігати Railway Volume /data, DB_PATH=/data/rok.db та приватний BOT_TOKEN без змін.
+Realm of Kings v0.7
+
+Illustrated herald assets integrated into the flag editor.
