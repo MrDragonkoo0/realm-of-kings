@@ -1,6 +1,2 @@
-Realm of Kings Telegram Mini App
-Version: 0.9.4
-
-Changes: individual illustrated UI button textures imported from the supplied icon archive; menu and navigation textures grouped by category; 29 new crest images added to public/heralds; flag editor updated to show all new crests; CSS/JS cache-busted.
-Database and server logic are carried over from v0.9.3. Keep Railway Volume /data and DB_PATH=/data/rok.db.
-Local syntax and asset-path checks were run; live Telegram/Railway deployment was not run from this build environment.
+Realm of Kings v0.9.7
+Heralds cleaned: only the 29 user-supplied herald images remain; legacy saved emblem IDs are mapped to the new names.

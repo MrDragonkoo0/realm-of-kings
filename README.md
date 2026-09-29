@@ -32,9 +32,15 @@
 - Фоновий SVG має абсолютний шлях; CSS/JS отримали версію `0.9.3` для очищення кешу.
 
 
-## v0.9.4 — UI assets
+## v0.9.5 — UI assets
 - Menu button textures: `public/ui/menu_buttons/<category>/{normal,active,disabled}.png`.
 - Navigation textures: `public/ui/navigation/<tab>/{normal,active,disabled}.png` (where an imported unique state was unavailable, the v0.9.3 fallback is retained).
 - New uploaded heralds: `public/heralds/crest_01.png` through `crest_29.png`, all in one folder with existing heralds.
 - The flag editor includes the new crest choices.
 - Database configuration and server logic are preserved; do not remove Railway Volume `/data`.
+
+
+## v0.9.6 UI texture layout
+- Menu textures are stored directly in `public/ui/menu_buttons/` as `<category>_<state>.png`.
+- Navigation textures are stored directly in `public/ui/navigation/` as `<tab>_<state>.png`.
+- Each image is cropped from the supplied full sprite sheet and the outside checkerboard is made transparent.
