@@ -213,8 +213,26 @@ body{padding:0 0 calc(76px + env(safe-area-inset-bottom));background:radial-grad
 @media(max-width:390px) { #game .asset-home-grid {gap:5px} #bottomNav button img {max-height:52px} }
 
 
-/* ROK v0.9.4 — imported individual illustrated button textures */
+/* ROK v0.9.5 — normalized textures and safe fallback */
 #game .asset-home-grid .home-asset-button { aspect-ratio: 4.15 / 1; }
 #game .asset-home-grid .home-asset-button .menu-texture { object-fit: contain; }
 #bottomNav button img { width: 100%; height: auto; max-height: 52px; object-fit: contain; }
 .herald-option .emblem-image { object-fit: contain; }
+
+
+/* v0.9.5: consistent button texture layout and graceful fallback when deployment misses an asset */
+#game .asset-home-grid .home-asset-button { position:relative; display:flex !important; align-items:center; justify-content:center; width:100%; min-width:0; min-height:0 !important; aspect-ratio:4 / 1; height:auto; padding:0 !important; margin:0; overflow:hidden; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:none !important; }
+#game .asset-home-grid .home-asset-button .menu-texture { display:block; width:100%; height:100%; object-fit:contain; margin:0; padding:0; border:0; background:transparent; pointer-events:none; }
+#game .asset-home-grid .home-asset-button.asset-fallback { aspect-ratio:4 / 1; border:1px solid #b78b3d !important; border-radius:10px !important; background:linear-gradient(135deg,#17314b,#07111f) !important; color:#f5e8cf; }
+#game .asset-home-grid .home-asset-button.asset-fallback::after { content:attr(aria-label); color:#f5e8cf; font:600 16px Georgia,serif; line-height:1.2; text-align:center; }
+#bottomNav button img { display:block; width:100%; height:100%; max-height:54px; object-fit:contain; margin:0; padding:0; border:0; background:transparent; }
+#bottomNav button.asset-fallback { display:flex; align-items:center; justify-content:center; min-height:54px; border-top:1px solid #9a7737 !important; background:#101b2a !important; color:#f3d782; }
+#bottomNav button.asset-fallback::after { content:attr(aria-label); font:600 10px Georgia,serif; line-height:1.1; text-align:center; overflow-wrap:anywhere; }
+@media(max-width:390px){#game .asset-home-grid .home-asset-button.asset-fallback::after{font-size:13px}#bottomNav button.asset-fallback::after{font-size:9px}}
+
+
+/* ROK v0.9.6 — flattened, correctly cropped UI textures */
+#game .asset-home-grid .home-asset-button { aspect-ratio: 4.05 / 1; }
+#game .asset-home-grid .home-asset-button .menu-texture { width:100% !important; height:100% !important; object-fit:fill !important; }
+#bottomNav button { min-height:54px; }
+#bottomNav button img { display:block; width:100%; height:auto; max-height:58px; object-fit:contain; }
