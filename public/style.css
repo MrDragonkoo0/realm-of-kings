@@ -363,3 +363,6 @@ body{padding:0 0 calc(76px + env(safe-area-inset-bottom));background:radial-grad
 
 /* v0.10.9 army garrison controls */
 .garrison-row{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;margin:8px 0;padding-top:8px;border-top:1px solid #4f462f}.garrison-row span{grid-column:1/-1;font-size:13px;color:#d6dce5}.garrison-row input{min-width:0;width:66px;background:#0b111a;color:#fff;border:1px solid #76603a;border-radius:6px;padding:8px}.garrison-row button{padding:8px 10px;font-size:12px}@media(max-width:370px){.garrison-row{gap:4px}.garrison-row button{padding:7px 6px;font-size:11px}}
+
+/* v0.11.0 advanced army */
+#game select#army-formation{max-width:100%;background:#111a25;color:#f5e8cf;border:1px solid #76603a;border-radius:8px;padding:10px;margin:6px 4px 6px 0}.army-unit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.card .garrison-row button{white-space:normal}
