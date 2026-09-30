@@ -17,12 +17,26 @@ function initSettlements(db) {
  CREATE TABLE IF NOT EXISTS settlement_buildings (
   id INTEGER PRIMARY KEY AUTOINCREMENT, settlement_id INTEGER NOT NULL, building_key TEXT NOT NULL,
   level INTEGER NOT NULL DEFAULT 1, target_level INTEGER, status TEXT NOT NULL DEFAULT 'built', finish_at INTEGER,
-  UNIQUE(settlement_id,building_key), FOREIGN KEY(settlement_id) REFERENCES settlements(id) ON DELETE CASCADE
+  FOREIGN KEY(settlement_id) REFERENCES settlements(id) ON DELETE CASCADE
  );
  CREATE TABLE IF NOT EXISTS settlement_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT, settlement_id INTEGER NOT NULL, event TEXT NOT NULL,
   details TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
  );`);
+ // Migrate older schema that allowed only one copy of each building per settlement.
+ const indexes=db.prepare('PRAGMA index_list(settlement_buildings)').all();
+ const hasBuildingUnique=indexes.some(ix=>ix.unique && db.prepare(`PRAGMA index_info('${ix.name.replace(/'/g, "''")}')`).all().map(c=>c.name).includes('building_key') && db.prepare(`PRAGMA index_info('${ix.name.replace(/'/g, "''")}')`).all().map(c=>c.name).includes('settlement_id'));
+ if(hasBuildingUnique){
+  db.exec(`CREATE TABLE settlement_buildings_new (
+   id INTEGER PRIMARY KEY AUTOINCREMENT, settlement_id INTEGER NOT NULL, building_key TEXT NOT NULL,
+   level INTEGER NOT NULL DEFAULT 1, target_level INTEGER, status TEXT NOT NULL DEFAULT 'built', finish_at INTEGER,
+   FOREIGN KEY(settlement_id) REFERENCES settlements(id) ON DELETE CASCADE
+  );
+  INSERT INTO settlement_buildings_new(id,settlement_id,building_key,level,target_level,status,finish_at)
+   SELECT id,settlement_id,building_key,level,target_level,status,finish_at FROM settlement_buildings;
+  DROP TABLE settlement_buildings;
+  ALTER TABLE settlement_buildings_new RENAME TO settlement_buildings;`);
+ }
  const buildingColumns=db.prepare('PRAGMA table_info(settlement_buildings)').all().map(x=>x.name);
  if(!buildingColumns.includes('target_level')) db.exec('ALTER TABLE settlement_buildings ADD COLUMN target_level INTEGER');
  const columns=db.prepare('PRAGMA table_info(settlements)').all().map(x=>x.name);
@@ -54,14 +68,14 @@ function listSettlements(db,id){
 function detail(db,id,sid){const s=ownerSettlement(db,id,sid);if(!s)return null;return {...s,resources:Object.fromEntries(db.prepare('SELECT resource_key,amount FROM settlement_resources WHERE settlement_id=?').all(sid).map(x=>[x.resource_key,x.amount])),buildings:db.prepare('SELECT b.*,c.name,c.category FROM settlement_buildings b LEFT JOIN (SELECT key,name,category FROM json_each(?)) c ON 0 WHERE b.settlement_id=?').all('[]',sid)};}
 function installSettlementRoutes(app,db,getUserId){
  app.get('/api/settlements',(req,res)=>{try{const id=getUserId(req);res.json(listSettlements(db,id));}catch(e){res.status(400).json({error:e.message})}});
- app.post('/api/settlements',(req,res)=>{try{const id=getUserId(req),name=String(req.body.name||'').trim();if(!name||name.length>40)return res.status(400).json({error:'Назва поселення: 1–40 символів'});const p=db.prepare('SELECT gold FROM players WHERE telegram_id=?').get(id);if(!p)return res.status(400).json({error:'Спочатку створи королівство'});if(p.gold<100)return res.status(400).json({error:'Для заснування села потрібно 100 золота'});const n=db.prepare('SELECT COUNT(*) n FROM settlements WHERE telegram_id=?').get(id).n;if(n>=26)return res.status(400).json({error:'Досягнуто ліміту у 25 поселень плюс столиця'});const info=db.prepare("INSERT INTO settlements(telegram_id,name,type,population,housing,food,gold) VALUES(?,?,'village',100,200,100,0)").run(id,name);db.prepare('UPDATE players SET gold=gold-100,xp=xp+5 WHERE telegram_id=?').run(id);const sid=Number(info.lastInsertRowid);for(const key of ['logging_camp','stone_quarry'])db.prepare("INSERT INTO settlement_buildings(settlement_id,building_key,level,status) VALUES(?,?,1,'built')").run(sid,key);db.prepare('INSERT INTO settlement_history(settlement_id,event,details) VALUES(?,?,?)').run(sid,'founded','Засновано нове село');res.json({settlement:ownerSettlement(db,id,sid),...listSettlements(db,id)});}catch(e){res.status(400).json({error:e.message})}});
+ app.post('/api/settlements',(req,res)=>{try{const id=getUserId(req),name=String(req.body.name||'').trim();if(!name||name.length>40)return res.status(400).json({error:'Назва поселення: 1–40 символів'});const p=db.prepare('SELECT gold FROM players WHERE telegram_id=?').get(id);if(!p)return res.status(400).json({error:'Спочатку створи королівство'});if(p.gold<500)return res.status(400).json({error:'Для заснування села потрібно 500 золота'});const n=db.prepare('SELECT COUNT(*) n FROM settlements WHERE telegram_id=?').get(id).n;if(n>=26)return res.status(400).json({error:'Досягнуто ліміту у 25 поселень плюс столиця'});const info=db.prepare("INSERT INTO settlements(telegram_id,name,type,population,housing,food,gold) VALUES(?,?,'village',100,200,100,0)").run(id,name);db.prepare('UPDATE players SET gold=gold-500,xp=xp+5 WHERE telegram_id=?').run(id);const sid=Number(info.lastInsertRowid);for(const key of ['logging_camp','stone_quarry'])db.prepare("INSERT INTO settlement_buildings(settlement_id,building_key,level,status) VALUES(?,?,1,'built')").run(sid,key);db.prepare('INSERT INTO settlement_history(settlement_id,event,details) VALUES(?,?,?)').run(sid,'founded','Засновано нове село');res.json({settlement:ownerSettlement(db,id,sid),...listSettlements(db,id)});}catch(e){res.status(400).json({error:e.message})}});
  app.get('/api/settlements/catalog/buildings',(req,res)=>res.json({catalog:BUILDING_CATALOG}));
  app.get('/api/settlements/:sid',(req,res)=>{try{tickSettlements(db);const id=getUserId(req),sid=Number(req.params.sid),s=ownerSettlement(db,id,sid);if(!s)return res.status(404).json({error:'Поселення не знайдено'});const buildings=db.prepare('SELECT id,building_key,level,target_level,status,finish_at FROM settlement_buildings WHERE settlement_id=? ORDER BY id').all(sid).map(b=>({...b,...(BUILDING_CATALOG.find(c=>c.key===b.building_key)||{})}));const resources=Object.fromEntries(db.prepare('SELECT resource_key,amount FROM settlement_resources WHERE settlement_id=?').all(sid).map(x=>[x.resource_key,x.amount]));res.json({...s,resources,buildings,defensePower:s.defense_level*100+(buildings.filter(b=>['wooden_palisade','stone_wall','reinforced_wall','main_gate','iron_gate','watchtower','archer_tower','bastion'].includes(b.building_key)).reduce((n,b)=>n+b.level*50,0))});}catch(e){res.status(400).json({error:e.message})}});
  app.post('/api/settlements/:sid/build',(req,res)=>{try{
   const id=getUserId(req),sid=Number(req.params.sid),s=ownerSettlement(db,id,sid),key=String(req.body.key||''),b=BUILDING_CATALOG.find(x=>x.key===key);
   if(!s||!b)return res.status(400).json({error:'Поселення або будівлю не знайдено'});
   tickSettlements(db);
-  if(db.prepare('SELECT id FROM settlement_buildings WHERE settlement_id=? AND building_key=?').get(sid,key))return res.status(400).json({error:'Ця будівля вже є. Використай покращення.'});
+  // Multiple copies of the same building are allowed in one settlement.
   const p=db.prepare('SELECT gold,wood,stone,iron FROM players WHERE telegram_id=?').get(id),cost=b.baseCost;
   if(!p||['gold','wood','stone','iron'].some(r=>(p[r]||0)<cost[r]))return res.status(400).json({error:`Недостатньо ресурсів. Потрібно: ${cost.gold} золота, ${cost.wood} деревини, ${cost.stone} каменю, ${cost.iron} заліза.`});
   db.prepare('UPDATE players SET gold=gold-?,wood=wood-?,stone=stone-?,iron=iron-? WHERE telegram_id=?').run(cost.gold,cost.wood,cost.stone,cost.iron,id);
@@ -73,7 +87,7 @@ function installSettlementRoutes(app,db,getUserId){
  app.post('/api/settlements/:sid/upgrade',(req,res)=>{try{
   const id=getUserId(req),sid=Number(req.params.sid),s=ownerSettlement(db,id,sid),key=String(req.body.key||'');if(!s)return res.status(404).json({error:'Поселення не знайдено'});
   tickSettlements(db);
-  const b=db.prepare('SELECT * FROM settlement_buildings WHERE settlement_id=? AND building_key=?').get(sid,key);if(!b)return res.status(400).json({error:'Спочатку збудуй цю будівлю'});
+  const buildingId=Number(req.body.buildingId||0);const b=buildingId?db.prepare('SELECT * FROM settlement_buildings WHERE settlement_id=? AND id=?').get(sid,buildingId):db.prepare("SELECT * FROM settlement_buildings WHERE settlement_id=? AND building_key=? AND status='built' ORDER BY level,id LIMIT 1").get(sid,key);if(!b)return res.status(400).json({error:'Спочатку збудуй цю будівлю'});
   if(b.status!=='built')return res.status(400).json({error:'Ця будівля вже будується або покращується.'});
   const item=BUILDING_CATALOG.find(x=>x.key===key);if(!item)return res.status(400).json({error:'Немає даних про будівлю'});
   const nextLevel=b.level+1,scale=Math.pow(1.5,b.level),cost=Object.fromEntries(['wood','stone','iron','gold'].map(r=>[r,Math.ceil(item.baseCost[r]*scale*0.8)]));
