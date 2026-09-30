@@ -46,6 +46,15 @@ function initSettlements(db) {
  if(!buildingColumns.includes('target_level')) db.exec('ALTER TABLE settlement_buildings ADD COLUMN target_level INTEGER');
  const columns=db.prepare('PRAGMA table_info(settlements)').all().map(x=>x.name);
  if(!columns.includes('last_growth_at')) db.exec("ALTER TABLE settlements ADD COLUMN last_growth_at INTEGER NOT NULL DEFAULT 0");
+ db.exec(`CREATE TABLE IF NOT EXISTS settlement_garrisons (
+  settlement_id INTEGER NOT NULL, unit_key TEXT NOT NULL, amount INTEGER NOT NULL DEFAULT 0 CHECK(amount>=0),
+  PRIMARY KEY(settlement_id,unit_key), FOREIGN KEY(settlement_id) REFERENCES settlements(id) ON DELETE CASCADE
+ );
+ CREATE TABLE IF NOT EXISTS army_upkeep_state (
+  telegram_id INTEGER PRIMARY KEY, last_tick INTEGER NOT NULL DEFAULT 0,
+  gold_remainder REAL NOT NULL DEFAULT 0, food_remainder REAL NOT NULL DEFAULT 0,
+  last_food_shortage REAL NOT NULL DEFAULT 0
+ );`);
  initProductionSchema(db);
  const players=db.prepare('SELECT telegram_id,kingdom_name,population,gold,wood,stone,iron FROM players').all();
  const add=db.prepare('INSERT INTO settlements(telegram_id,name,type,is_capital,population,housing,gold) VALUES(?,?,\'city\',1,?,?,?)');
@@ -121,5 +130,73 @@ function installSettlementRoutes(app,db,getUserId){
   db.prepare('INSERT INTO settlement_history(settlement_id,event,details) VALUES(?,?,?)').run(sid,'upgrade_started',`Розпочато покращення ${item.name} до рівня ${nextLevel}; ${Math.ceil(duration/60)} хв.`);
   res.json({ok:true,status:'upgrading',level:b.level,target_level:nextLevel,finish_at:finish,duration_seconds:duration,cost});
  }catch(e){res.status(400).json({error:e.message})}});
+
+// v0.10.9 army garrisons and hourly upkeep.
+const UNIT_KEYS=['swordsmen','archers','shieldmen','cavalry','knights'];
+const UNIT_POWER={swordsmen:1,archers:3,shieldmen:2,cavalry:7,knights:15};
+const UNIT_UPKEEP={swordsmen:0.1,archers:0.1,shieldmen:0.1,cavalry:0.3,knights:0.5};
+function armyTotals(db,id){
+ const p=db.prepare('SELECT swordsmen,archers,shieldmen,cavalry,knights,gold FROM players WHERE telegram_id=?').get(id);
+ if(!p)return null;
+ const field=Object.fromEntries(UNIT_KEYS.map(k=>[k,Number(p[k]||0)]));
+ const rows=db.prepare(`SELECT g.unit_key,SUM(g.amount) amount FROM settlement_garrisons g JOIN settlements s ON s.id=g.settlement_id WHERE s.telegram_id=? GROUP BY g.unit_key`).all(id);
+ const garrison=Object.fromEntries(UNIT_KEYS.map(k=>[k,0]));for(const r of rows)if(UNIT_KEYS.includes(r.unit_key))garrison[r.unit_key]=Number(r.amount||0);
+ const total=Object.fromEntries(UNIT_KEYS.map(k=>[k,field[k]+garrison[k]]));
+ const count=UNIT_KEYS.reduce((n,k)=>n+total[k],0);
+ const hourlyGold=UNIT_KEYS.reduce((n,k)=>n+total[k]*UNIT_UPKEEP[k],0);
+ const capital=db.prepare('SELECT id FROM settlements WHERE telegram_id=? AND is_capital=1').get(id);
+ const settlements=db.prepare('SELECT id,name,type,is_capital,population FROM settlements WHERE telegram_id=? ORDER BY is_capital DESC,type,name').all(id).map(x=>{
+  const units=db.prepare('SELECT unit_key,amount FROM settlement_garrisons WHERE settlement_id=?').all(x.id);
+  const g=Object.fromEntries(UNIT_KEYS.map(k=>[k,0]));for(const u of units)if(UNIT_KEYS.includes(u.unit_key))g[u.unit_key]=Number(u.amount||0);
+  const soldiers=UNIT_KEYS.reduce((n,k)=>n+g[k],0);
+  return {...x,garrison:g,soldiers,power:UNIT_KEYS.reduce((n,k)=>n+g[k]*UNIT_POWER[k],0)};
+ });
+ const food=capital?db.prepare("SELECT resource_key,amount FROM settlement_resources WHERE settlement_id=? AND resource_key IN ('food','bread','wheat','carrot','potato','apples','milk','eggs','meat')").all(capital.id):[];
+ const values={food:1,bread:1.25,wheat:.8,carrot:.7,potato:.9,apples:.7,milk:1.1,eggs:1.2,meat:1.5};
+ const foodStock=food.reduce((n,r)=>n+Number(r.amount||0)*(values[r.resource_key]||1),0);
+ const hourlyFood=count/10;
+ return {field,garrison,total,count,power:UNIT_KEYS.reduce((n,k)=>n+total[k]*UNIT_POWER[k],0),hourlyGold,hourlyFood,gold:Number(p.gold||0),settlements,capitalSettlementId:capital?.id||null,foodStock,foodHours:hourlyFood>0?foodStock/hourlyFood:null};
+}
+function tickArmyUpkeep(db,id,now=Math.floor(Date.now()/1000)){
+ const a=armyTotals(db,id);if(!a)return;
+ let st=db.prepare('SELECT * FROM army_upkeep_state WHERE telegram_id=?').get(id);
+ if(!st){db.prepare('INSERT INTO army_upkeep_state(telegram_id,last_tick) VALUES(?,?)').run(id,now);return;}
+ const hours=Math.min(24,Math.max(0,Math.floor((now-Number(st.last_tick||now))/3600)));
+ if(!hours)return;
+ let goldRemainder=Number(st.gold_remainder||0),foodRemainder=Number(st.food_remainder||0),shortage=0;
+ const goldDue=goldRemainder+a.hourlyGold*hours,foodDue=foodRemainder+a.hourlyFood*hours;
+ const goldCharge=Math.floor(goldDue);goldRemainder=goldDue-goldCharge;
+ const player=db.prepare('SELECT gold FROM players WHERE telegram_id=?').get(id);
+ const paid=Math.min(Number(player?.gold||0),goldCharge);
+ if(paid)db.prepare('UPDATE players SET gold=gold-? WHERE telegram_id=?').run(paid,id);
+ if(a.capitalSettlementId){
+  let remain=foodDue;const order=['food','wheat','carrot','potato','apples','bread','milk','eggs','meat'];
+  const value={food:1,wheat:.8,carrot:.7,potato:.9,apples:.7,bread:1.25,milk:1.1,eggs:1.2,meat:1.5};
+  for(const key of order){if(remain<=0)break;const row=db.prepare('SELECT amount FROM settlement_resources WHERE settlement_id=? AND resource_key=?').get(a.capitalSettlementId,key);const have=Number(row?.amount||0);if(have<=0)continue;const take=Math.min(have,remain/(value[key]||1));db.prepare('UPDATE settlement_resources SET amount=MAX(0,amount-?) WHERE settlement_id=? AND resource_key=?').run(take,a.capitalSettlementId,key);remain-=take*(value[key]||1);}
+  shortage=Math.max(0,remain);foodRemainder=0;
+ }else{shortage=foodDue;foodRemainder=0;}
+ db.prepare(`INSERT INTO army_upkeep_state(telegram_id,last_tick,gold_remainder,food_remainder,last_food_shortage) VALUES(?,?,?,?,?)
+ ON CONFLICT(telegram_id) DO UPDATE SET last_tick=excluded.last_tick,gold_remainder=excluded.gold_remainder,food_remainder=excluded.food_remainder,last_food_shortage=excluded.last_food_shortage`).run(id,now,goldRemainder,foodRemainder,shortage);
+}
+app.get('/api/army',(req,res)=>{try{const id=getUserId(req);tickArmyUpkeep(db,id);const a=armyTotals(db,id);if(!a)return res.status(400).json({error:'Немає королівства'});const upkeep=db.prepare('SELECT last_food_shortage FROM army_upkeep_state WHERE telegram_id=?').get(id);res.json({...a,lastFoodShortage:Number(upkeep?.last_food_shortage||0),unitPower:UNIT_POWER,unitUpkeep:UNIT_UPKEEP});}catch(e){res.status(400).json({error:e.message})}});
+app.post('/api/army/garrison',(req,res)=>{try{
+ const id=getUserId(req),sid=Number(req.body.sid),type=String(req.body.type||''),amount=Math.floor(Number(req.body.amount)),action=String(req.body.action||'deploy');
+ if(!UNIT_KEYS.includes(type)||!Number.isFinite(amount)||amount<1||amount>100000)return res.status(400).json({error:'Перевір тип війська та кількість (1–100000).'});
+ const settlement=ownerSettlement(db,id,sid);if(!settlement)return res.status(404).json({error:'Поселення не знайдено'});
+ const p=db.prepare('SELECT * FROM players WHERE telegram_id=?').get(id);if(!p)return res.status(400).json({error:'Немає королівства'});
+ const current=Number(db.prepare('SELECT amount FROM settlement_garrisons WHERE settlement_id=? AND unit_key=?').get(sid,type)?.amount||0);
+ if(action==='deploy'){
+  if(Number(p[type]||0)<amount)return res.status(400).json({error:'У польовому війську недостатньо таких солдатів.'});
+  db.prepare(`UPDATE players SET ${type}=${type}-? WHERE telegram_id=?`).run(amount,id);
+  db.prepare('INSERT INTO settlement_garrisons(settlement_id,unit_key,amount) VALUES(?,?,?) ON CONFLICT(settlement_id,unit_key) DO UPDATE SET amount=amount+excluded.amount').run(sid,type,amount);
+ }else if(action==='recall'){
+  if(current<amount)return res.status(400).json({error:'У гарнізоні недостатньо таких солдатів.'});
+  db.prepare('UPDATE settlement_garrisons SET amount=amount-? WHERE settlement_id=? AND unit_key=?').run(amount,sid,type);
+  db.prepare(`UPDATE players SET ${type}=${type}+? WHERE telegram_id=?`).run(amount,id);
+ }else return res.status(400).json({error:'Невідома дія'});
+ db.prepare('INSERT INTO settlement_history(settlement_id,event,details) VALUES(?,?,?)').run(sid,'garrison',`${action==='deploy'?'До гарнізону передано':'З гарнізону повернуто'} ${amount} — ${type}`);
+ tickArmyUpkeep(db,id);
+ res.json(armyTotals(db,id));
+}catch(e){res.status(400).json({error:e.message})}});
 }
 module.exports={initSettlements,installSettlementRoutes,listSettlements,tickSettlements};
