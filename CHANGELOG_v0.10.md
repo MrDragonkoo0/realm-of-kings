@@ -31,3 +31,9 @@
 
 
 Structure Mode: PNG-based menu and navigation textures are temporarily replaced with CSS buttons and icon glyphs. Economy module and routes are retained.
+
+
+## Структуризація коду
+- Серверні каталоги, SQLite-схема та Telegram-авторизація винесені в окремі модулі.
+- Клієнтський JavaScript поділений на core, heraldry та production.
+- Дані гравців не очищуються; схема ініціалізується через безпечні CREATE IF NOT EXISTS та ALTER TABLE ADD COLUMN.

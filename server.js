@@ -1,5 +1,4 @@
 const express = require('express');
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
@@ -14,102 +13,8 @@ fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA journal_mode = WAL;');
 
-db.exec(`CREATE TABLE IF NOT EXISTS players (
- telegram_id INTEGER PRIMARY KEY, kingdom_name TEXT, ruler_name TEXT,
- level INTEGER NOT NULL DEFAULT 1, xp INTEGER NOT NULL DEFAULT 0,
- population INTEGER NOT NULL DEFAULT 0, gold INTEGER NOT NULL DEFAULT 100,
- gems INTEGER NOT NULL DEFAULT 0, cities INTEGER NOT NULL DEFAULT 1,
- villages INTEGER NOT NULL DEFAULT 0, houses INTEGER NOT NULL DEFAULT 0,
- smithy INTEGER NOT NULL DEFAULT 0, farm INTEGER NOT NULL DEFAULT 0,
- stable INTEGER NOT NULL DEFAULT 0, barracks INTEGER NOT NULL DEFAULT 0,
- range INTEGER NOT NULL DEFAULT 0, temple INTEGER NOT NULL DEFAULT 0,
- bakery INTEGER NOT NULL DEFAULT 0, workshop INTEGER NOT NULL DEFAULT 0,
- hospital INTEGER NOT NULL DEFAULT 0, military_power INTEGER NOT NULL DEFAULT 0,
- stone INTEGER NOT NULL DEFAULT 0, wood INTEGER NOT NULL DEFAULT 0,
- iron INTEGER NOT NULL DEFAULT 0, straw INTEGER NOT NULL DEFAULT 0,
- brick INTEGER NOT NULL DEFAULT 0, clay INTEGER NOT NULL DEFAULT 0,
- sand INTEGER NOT NULL DEFAULT 0, bread INTEGER NOT NULL DEFAULT 0,
- meat INTEGER NOT NULL DEFAULT 0, flour INTEGER NOT NULL DEFAULT 0,
- carrot INTEGER NOT NULL DEFAULT 0, potato INTEGER NOT NULL DEFAULT 0,
- water INTEGER NOT NULL DEFAULT 0, apples INTEGER NOT NULL DEFAULT 0, milk INTEGER NOT NULL DEFAULT 0, eggs INTEGER NOT NULL DEFAULT 0,
- wheat INTEGER NOT NULL DEFAULT 0, swordsmen INTEGER NOT NULL DEFAULT 0,
- archers INTEGER NOT NULL DEFAULT 0, shieldmen INTEGER NOT NULL DEFAULT 0,
- cavalry INTEGER NOT NULL DEFAULT 0, knights INTEGER NOT NULL DEFAULT 0,
- townhall_level INTEGER NOT NULL DEFAULT 1,
- warehouse_level INTEGER NOT NULL DEFAULT 1,
- market_level INTEGER NOT NULL DEFAULT 1,
- walls_level INTEGER NOT NULL DEFAULT 1,
- gate_level INTEGER NOT NULL DEFAULT 1,
- field_count INTEGER NOT NULL DEFAULT 0,
- last_tax_at INTEGER NOT NULL DEFAULT 0,
- last_gather_at INTEGER NOT NULL DEFAULT 0,
- building_type TEXT, building_ends_at INTEGER,
- created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
-);`);
-
-// Non-destructive schema migration. Older ROK databases may be missing
-// columns that newer server code expects (for example `smithy`).
-// Add every known player column that is absent, without deleting existing data.
-const ALL_PLAYER_COLUMNS = [
- ['kingdom_name','TEXT'],['ruler_name','TEXT'],
- ['level','INTEGER NOT NULL DEFAULT 1'],['xp','INTEGER NOT NULL DEFAULT 0'],
- ['population','INTEGER NOT NULL DEFAULT 0'],['gold','INTEGER NOT NULL DEFAULT 100'],
- ['gems','INTEGER NOT NULL DEFAULT 0'],['cities','INTEGER NOT NULL DEFAULT 1'],
- ['villages','INTEGER NOT NULL DEFAULT 0'],['houses','INTEGER NOT NULL DEFAULT 0'],
- ['smithy','INTEGER NOT NULL DEFAULT 0'],['farm','INTEGER NOT NULL DEFAULT 0'],
- ['stable','INTEGER NOT NULL DEFAULT 0'],['barracks','INTEGER NOT NULL DEFAULT 0'],
- ['range','INTEGER NOT NULL DEFAULT 0'],['temple','INTEGER NOT NULL DEFAULT 0'],
- ['bakery','INTEGER NOT NULL DEFAULT 0'],['workshop','INTEGER NOT NULL DEFAULT 0'],
- ['hospital','INTEGER NOT NULL DEFAULT 0'],['military_power','INTEGER NOT NULL DEFAULT 0'],
- ['stone','INTEGER NOT NULL DEFAULT 0'],['wood','INTEGER NOT NULL DEFAULT 0'],
- ['iron','INTEGER NOT NULL DEFAULT 0'],['straw','INTEGER NOT NULL DEFAULT 0'],
- ['brick','INTEGER NOT NULL DEFAULT 0'],['clay','INTEGER NOT NULL DEFAULT 0'],
- ['sand','INTEGER NOT NULL DEFAULT 0'],['bread','INTEGER NOT NULL DEFAULT 0'],
- ['meat','INTEGER NOT NULL DEFAULT 0'],['flour','INTEGER NOT NULL DEFAULT 0'],
- ['carrot','INTEGER NOT NULL DEFAULT 0'],['potato','INTEGER NOT NULL DEFAULT 0'],
- ['water','INTEGER NOT NULL DEFAULT 0'],['apples','INTEGER NOT NULL DEFAULT 0'],['milk','INTEGER NOT NULL DEFAULT 0'],['eggs','INTEGER NOT NULL DEFAULT 0'],
- ['wheat','INTEGER NOT NULL DEFAULT 0'],['swordsmen','INTEGER NOT NULL DEFAULT 0'],
- ['archers','INTEGER NOT NULL DEFAULT 0'],['shieldmen','INTEGER NOT NULL DEFAULT 0'],
- ['cavalry','INTEGER NOT NULL DEFAULT 0'],['knights','INTEGER NOT NULL DEFAULT 0'],
- ['townhall_level','INTEGER NOT NULL DEFAULT 1'],['warehouse_level','INTEGER NOT NULL DEFAULT 1'],
- ['market_level','INTEGER NOT NULL DEFAULT 1'],['walls_level','INTEGER NOT NULL DEFAULT 1'],
- ['gate_level','INTEGER NOT NULL DEFAULT 1'],['field_count','INTEGER NOT NULL DEFAULT 0'],
- ['last_tax_at','INTEGER NOT NULL DEFAULT 0'],['last_gather_at','INTEGER NOT NULL DEFAULT 0'],
- ['building_type','TEXT'],['building_ends_at','INTEGER'],['flag_json','TEXT'],
- ['created_at','INTEGER NOT NULL DEFAULT (strftime(\'%s\',\'now\'))'],
- ['sawmill','INTEGER NOT NULL DEFAULT 0'],['mine','INTEGER NOT NULL DEFAULT 0'],
- ['woodcutters','INTEGER NOT NULL DEFAULT 0'],['miners','INTEGER NOT NULL DEFAULT 0'],
- ['last_extraction_at','INTEGER NOT NULL DEFAULT 0']
-];
-const existingColumns = new Set(db.prepare('PRAGMA table_info(players)').all().map(c => c.name));
-for (const [name,def] of ALL_PLAYER_COLUMNS) {
-  if (!existingColumns.has(name)) {
-    try { db.exec(`ALTER TABLE players ADD COLUMN ${name} ${def}`); } catch (_) {}
-  }
-}
-
-// v0.10 additive tables: production preferences, event history, and daily export quota.
-// These tables are created without replacing or clearing existing player data.
-db.exec(`CREATE TABLE IF NOT EXISTS production_preferences (
- telegram_id INTEGER NOT NULL, building_key TEXT NOT NULL,
- priority TEXT NOT NULL DEFAULT 'medium', updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
- PRIMARY KEY (telegram_id, building_key)
-);`);
-db.exec(`CREATE TABLE IF NOT EXISTS production_events (
- id INTEGER PRIMARY KEY AUTOINCREMENT, telegram_id INTEGER NOT NULL,
- building_key TEXT NOT NULL, resource_key TEXT NOT NULL, event_type TEXT NOT NULL,
- reason TEXT NOT NULL, created_at INTEGER NOT NULL
-);`);
-db.exec(`CREATE INDEX IF NOT EXISTS idx_production_events_player_time ON production_events(telegram_id, created_at);`);
-db.exec(`CREATE TABLE IF NOT EXISTS production_status (
- telegram_id INTEGER NOT NULL, building_key TEXT NOT NULL, is_paused INTEGER NOT NULL DEFAULT 0,
- updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
- PRIMARY KEY (telegram_id, building_key)
-);`);
-db.exec(`CREATE TABLE IF NOT EXISTS export_daily (
- telegram_id INTEGER NOT NULL, day_key TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0,
- PRIMARY KEY (telegram_id, day_key)
-);`);
+const { initializeSchema } = require('./src/db/schema');
+initializeSchema(db);
 initEconomy(db);
 
 // ROK v0.5.2: every kingdom starts with one free sawmill and one free mine.
@@ -117,47 +22,8 @@ initEconomy(db);
 db.exec('UPDATE players SET sawmill=1 WHERE sawmill=0');
 db.exec('UPDATE players SET mine=1 WHERE mine=0');
 
-const BUILDINGS = {
- house:{name:'🏠 Будинки',seconds:300,column:'houses'}, smithy:{name:'⚒️ Кузня',seconds:1200,column:'smithy'},
- farm:{name:'🌾 Ферма',seconds:900,column:'farm'}, stable:{name:'🐴 Конюшня',seconds:2400,column:'stable'},
- barracks:{name:'🛡️ Казарми',seconds:1800,column:'barracks'}, range:{name:'🏹 Стрільбище',seconds:1500,column:'range'},
- temple:{name:'⛪ Храм',seconds:2100,column:'temple'}, bakery:{name:'🍞 Пекарня',seconds:1200,column:'bakery'},
- workshop:{name:'🧵 Майстерня',seconds:1500,column:'workshop'}, hospital:{name:'🏥 Лікарня',seconds:2400,column:'hospital'},
- sawmill:{name:'🪚 Лісопилка',seconds:1200,column:'sawmill'}, mine:{name:'⛏️ Шахта',seconds:1800,column:'mine'}
-};
-const BUILDING_COSTS = {
- house:{wood:15,stone:10,brick:10}, smithy:{wood:10,stone:15,iron:5,clay:5},
- farm:{wood:5,stone:10,straw:25}, stable:{wood:30,stone:50,straw:25,iron:10,clay:10,brick:20},
- barracks:{wood:25,stone:30,iron:15}, range:{wood:20,stone:20,iron:10},
- temple:{wood:20,stone:35,brick:20}, bakery:{wood:15,stone:15,brick:15,clay:5},
- workshop:{wood:20,stone:15,iron:10}, hospital:{wood:25,stone:30,brick:20}, sawmill:{wood:20,stone:15}, mine:{wood:30,stone:40}
-};
-const UPGRADES = {
- townhall:{name:'🏛️ Ратуша',column:'townhall_level',base:{stone:40,wood:30,brick:20},time:900},
- warehouse:{name:'📦 Склад',column:'warehouse_level',base:{wood:25,stone:20},time:600},
- market:{name:'🏪 Ринок',column:'market_level',base:{wood:30,stone:20,brick:15},time:900},
- walls:{name:'🏰 Стіни',column:'walls_level',base:{stone:50,brick:30},time:1200},
- gate:{name:'🚪 Ворота',column:'gate_level',base:{wood:40,iron:20,stone:20},time:1200}
-};
-const TROOPS = {
- swordsmen:{name:'🗡️ Мечники',power:1,cost:{gold:20,iron:1}},
- archers:{name:'🏹 Лучники',power:3,cost:{gold:35,wood:1}},
- shieldmen:{name:'🛡️ Щитоносці',power:2,cost:{gold:30,iron:1}},
- cavalry:{name:'🐎 Легка кіннота',power:7,cost:{gold:70,iron:2}},
- knights:{name:'🛡️ Лицарі',power:15,cost:{gold:150,iron:3}}
-};
-const MARKET = {wood:4,stone:5,iron:12,straw:3,brick:10,clay:6,sand:3,wheat:8,bread:15,meat:20,carrot:6,potato:6,apples:7,milk:8,eggs:7,copper:10,coal:4,silver:35,gold_ore:45,salt:5,gemstones:80,planks:8,glass:14,metal:20,copper_bars:18,tools:25,flour:10};
-
-function verifyTelegram(initData){
- if(!initData || !process.env.BOT_TOKEN) throw new Error('Telegram авторизація не налаштована');
- const p=new URLSearchParams(initData), hash=p.get('hash'); if(!hash) throw new Error('Немає Telegram hash');
- p.delete('hash'); const dataCheck=[...p.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>`${k}=${v}`).join('\n');
- const secret=crypto.createHmac('sha256','WebAppData').update(process.env.BOT_TOKEN).digest();
- const expected=crypto.createHmac('sha256',secret).update(dataCheck).digest('hex');
- if(hash.length!==expected.length || !crypto.timingSafeEqual(Buffer.from(hash),Buffer.from(expected))) throw new Error('Невірна Telegram авторизація');
- const user=JSON.parse(p.get('user')||'{}'); if(!user.id) throw new Error('Не знайдено Telegram ID'); return user;
-}
-function getUserId(req){ return verifyTelegram(req.headers['x-telegram-init-data']).id; }
+const { BUILDINGS, BUILDING_COSTS, UPGRADES, TROOPS, MARKET } = require('./src/config/catalogs');
+const { getUserId } = require('./src/auth/telegram');
 function getPlayer(id){ return db.prepare('SELECT * FROM players WHERE telegram_id=?').get(id); }
 function settleConstruction(p){
  if(!p?.building_type || !p.building_ends_at || p.building_ends_at>Date.now()/1000) return p;
