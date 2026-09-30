@@ -24,6 +24,9 @@ db.exec('UPDATE players SET mine=1 WHERE mine=0');
 
 const { BUILDINGS, BUILDING_COSTS, UPGRADES, TROOPS, MARKET } = require('./src/config/catalogs');
 const { getUserId } = require('./src/auth/telegram');
+const { initSettlements, installSettlementRoutes, tickSettlements } = require('./src/settlements/service');
+initSettlements(db);
+installSettlementRoutes(app, db, getUserId);
 function getPlayer(id){ return db.prepare('SELECT * FROM players WHERE telegram_id=?').get(id); }
 function settleConstruction(p){
  if(!p?.building_type || !p.building_ends_at || p.building_ends_at>Date.now()/1000) return p;
@@ -80,7 +83,7 @@ function deduct(id,cost){ const sets=[],vals=[]; for(const [k,v] of Object.entri
 
 app.get('/api/state',(req,res)=>{try{const p=currentPlayer(getUserId(req));if(!p)return res.json({registered:false});res.json(publicUser(p));}catch(e){res.status(401).json({error:e.message});}});
 app.get('/api/me',(req,res)=>{try{const p=currentPlayer(getUserId(req));res.json(p?publicUser(p):{registered:false});}catch(e){res.status(401).json({error:e.message});}});
-app.post('/api/register',(req,res)=>{try{const id=getUserId(req),kingdom=String(req.body.kingdom||'').trim(),ruler=String(req.body.ruler||'').trim();if(!kingdom||!ruler)return res.status(400).json({error:'Заповни обидва поля'});if(kingdom.length>32||ruler.length>32)return res.status(400).json({error:'Максимум 32 символи'});let p=getPlayer(id);if(!p){db.prepare('INSERT INTO players(telegram_id,kingdom_name,ruler_name,gold,cities,population,houses,sawmill,mine) VALUES(?,?,?,100,1,20,2,1,1)').run(id,kingdom,ruler);p=getPlayer(id);}res.json(publicUser(p));}catch(e){res.status(400).json({error:e.message});}});
+app.post('/api/register',(req,res)=>{try{const id=getUserId(req),kingdom=String(req.body.kingdom||'').trim(),ruler=String(req.body.ruler||'').trim();if(!kingdom||!ruler)return res.status(400).json({error:'Заповни обидва поля'});if(kingdom.length>32||ruler.length>32)return res.status(400).json({error:'Максимум 32 символи'});let p=getPlayer(id);if(!p){db.prepare('INSERT INTO players(telegram_id,kingdom_name,ruler_name,gold,cities,population,houses,sawmill,mine) VALUES(?,?,?,100,1,20,2,1,1)').run(id,kingdom,ruler);initSettlements(db);p=getPlayer(id);}res.json(publicUser(p));}catch(e){res.status(400).json({error:e.message});}});
 
 const FLAG_SHAPES=new Set(['rectangle','swallowtail','triangle','vertical','shield']);
 const FLAG_COLORS=new Set(['#b91c1c','#1d4ed8','#047857','#111827','#f8fafc','#d4af37','#7e22ce','#c2410c','#0f766e','#4d7c0f','#7f1d1d','#334155']);
@@ -174,6 +177,7 @@ app.get('/api/export/stats',(req,res)=>{try{
 
 installEconomyRoutes({app,db,getUserId,currentPlayer});
 setInterval(()=>{flushNotifications(db,process.env.BOT_TOKEN).catch(()=>{});},60*1000).unref();
+setInterval(()=>{try{tickSettlements(db)}catch(e){console.error('Settlement tick failed:',e.message)}},60*60*1000).unref();
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 const PORT=process.env.PORT||3000;
 app.listen(PORT,()=>console.log(`ROK v0.10 SQLite server on ${PORT}`));

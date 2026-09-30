@@ -1,46 +1,32 @@
-# Realm of Kings v0.10.0 — Економіка та автоматичне виробництво
+# Realm of Kings — v0.10.0
 
-## Що реалізовано у v0.10.0
+Telegram Mini App / Node.js + Express + SQLite. Requires Node.js >=22.5.
 
-- **Стартове господарство:** безкоштовні лісозаготівля та каменоломня для кожного королівства; для старих профілів із нульовим населенням виконується одноразове безпечне виправлення стартового населення без видалення інших даних.
-- **Автоматичне виробництво:** 27 типів виробничих будівель у категоріях видобутку, їжі та переробки; призначення/зняття працівників, ліміти працівників, виробничі ланцюги й автоматичне надходження на склад.
-- **Офлайн-симуляція:** виробниче накопичення обмежене 24 годинами; зарплати, харчування та зростання населення розраховуються погодинно з безпечним лімітом обробки довгої відсутності.
-- **Зарплати та продуктивність:** 1 золото за працівника на годину; борг зарплати, штраф −25% після 12 годин боргу та зупинка виробництва після 48 годин боргу; після погашення боргу робота відновлюється.
-- **Склад:** 1 000 одиниць на першому рівні, +50% місткості за кожен наступний рівень; виробничі пріоритети високий/середній/низький, черга та причини очікування.
-- **Будівництво й покращення:** таймери будівництва та покращення, паралельні покращення різних будівель, виробництво на старому рівні під час покращення, офлайн-завершення, скасування з поверненням 50%; якщо склад переповнений, повернення потрапляє в резерв і переноситься на склад за появи місця.
-- **Їжа й населення:** сім основних типів їжі, автоматичне виробництво та споживання, харчова забезпеченість у годинах/відсотках, різноманітність раціону, штрафи за нестачу їжі та приріст +1 житель за шість годин за наявності їжі й житла.
-- **Події й повідомлення:** кожна зупинка/відновлення записується; Telegram-повідомлення групуються після п’яти хвилин без нових подій; основна історія показує сім днів, старі події доступні в архіві з пошуком і сторінками.
-- **Статистика й експорт:** порівняння поточного й попереднього періоду за 7/30 днів, статистика за будівлями та причинами, денний графік, TXT для історії, TXT/CSV для статистики; спільний ліміт 10 експортів на гравця за київську добу.
-- **Збереження даних:** лише додаткові таблиці й колонки SQLite. Існуючі королівства та ресурси не видаляються.
+## Run
+1. `npm install`
+2. Set `BOT_TOKEN` to the Telegram bot token used for Mini App init-data verification.
+3. `npm start`
+4. Keep `DB_PATH` unset to use `rok.db`, or set it to a persistent SQLite path (recommended on hosting).
 
-## Розгортання на Railway
+## v0.10.0 implementation
+- Preserves the existing player/economy schema and adds settlement tables without dropping existing data.
+- Migrates each existing kingdom to one capital city if it does not already have one.
+- Settlement lists split cities and villages; each settlement has its own detail page, buildings, population, housing, food, workers, warehouse capacity, and defense level fields.
+- Founding a village costs 100 gold. New villages start with 100 residents and a starter logging camp and stone quarry.
+- Population grows by one every six hours while food and housing are available. Villages reaching 10,000 residents become cities automatically.
+- Includes a 100-building catalog grouped into 10 categories, build and upgrade APIs, and a settlement event log.
+- Main menu has six primary destinations: Settlements, Troops, Treasury, Market, Quests, Politics. Diplomacy is nested under Politics.
+- Production/economy modules and their existing API endpoints remain in place.
 
-1. Завантаж вміст теки `rok05` до репозиторію.
-2. Використовуй Node.js **22.5 або новіший**; Railway має виконати `npm install` і `npm start`.
-3. **Не змінюй** наявний `BOT_TOKEN`, `DB_PATH=/data/rok.db` та підключений Railway Volume `/data`.
-4. Не завантажуй порожню локальну базу поверх чинної Railway-бази. Нові таблиці створюються автоматично, без очищення старих.
-5. Telegram-повідомлення про події вимагають чинного `BOT_TOKEN`; гравець має мати змогу отримувати повідомлення від бота.
+## Modular layout
+- `src/settlements/catalog.js` — 100 building definitions and categories.
+- `src/settlements/service.js` — additive DB migration, settlement logic and API routes.
+- `src/db/schema.js` — existing core and production schema.
+- `src/config/catalogs.js` — legacy/core building, troop and market catalogs.
+- `economy.js` — existing economy and automatic production logic.
+- `public/js/core.js` — existing Mini App core screens.
+- `public/js/production.js` — production interface.
+- `public/js/settlements.js` — settlement UI and the six-button main menu.
 
-## Перевірка перед релізом
-
-- `node --check server.js`
-- `node --check economy.js`
-- `node --check public/script.js`
-- Перевірені основні сценарії економічного модуля: створення стану, призначення працівників, початок/скасування будівництва, початок/скасування покращення та погодинне виробництво в тестовій SQLite-базі.
-
-Окремі великі системи світу — повна карта зі 100 регіонами, каравани й решта майбутніх типів будівель — залишаються окремими оновленнями, а не частиною економічного релізу v0.10.0.
-
-
-## Структура коду v0.10.0
-
-- `server.js` — запуск Express, підключення модулів та API маршрути.
-- `src/config/catalogs.js` — каталоги будівель, вартість, війська й ціни ринку.
-- `src/db/schema.js` — створення таблиць і безпечні додаткові міграції SQLite.
-- `src/auth/telegram.js` — перевірка Telegram Mini App та отримання ID гравця.
-- `economy.js` — виробництво, зарплати, їжа, склад, пріоритети, історія та експорт.
-- `public/js/core.js` — основний клієнт, навігація, поселення й загальні екрани.
-- `public/js/heraldry.js` — прапори, герби та редактор геральдики.
-- `public/js/production.js` — інтерфейс виробництва, історії, статистики й експорту.
-- `public/script.js` — файл-сумісності; HTML напряму підключає розділені скрипти.
-
-Клієнтські файли навмисно підключаються як звичайні scripts, щоб зберегти сумісність з наявними `onclick`-обробниками.
+## Important scope note
+This update implements the settlement data model and the initial settlement UI/API. The legacy economy still primarily operates on kingdom-level resources; production/workers/food have not yet been fully migrated to independent per-settlement simulation. Siege resolution/capture, real diplomacy treaties, and quest logic also remain follow-up work. Do not treat those as implemented gameplay yet.
