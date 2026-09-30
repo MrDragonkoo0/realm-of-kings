@@ -55,6 +55,31 @@ function initSettlements(db) {
   gold_remainder REAL NOT NULL DEFAULT 0, food_remainder REAL NOT NULL DEFAULT 0,
   last_food_shortage REAL NOT NULL DEFAULT 0
  );`);
+ db.exec(`CREATE TABLE IF NOT EXISTS army_units (
+  telegram_id INTEGER NOT NULL, unit_key TEXT NOT NULL, amount INTEGER NOT NULL DEFAULT 0 CHECK(amount>=0), level INTEGER NOT NULL DEFAULT 1, xp INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY(telegram_id,unit_key)
+ );
+ CREATE TABLE IF NOT EXISTS army_technologies (
+  telegram_id INTEGER NOT NULL, tech_key TEXT NOT NULL, level INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY(telegram_id,tech_key)
+ );
+ CREATE TABLE IF NOT EXISTS army_commanders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, telegram_id INTEGER NOT NULL, name TEXT NOT NULL, level INTEGER NOT NULL DEFAULT 1, xp INTEGER NOT NULL DEFAULT 0, trait TEXT NOT NULL DEFAULT 'Тактик'
+ );
+ CREATE TABLE IF NOT EXISTS army_state (
+  telegram_id INTEGER PRIMARY KEY, formation TEXT NOT NULL DEFAULT 'balanced', morale INTEGER NOT NULL DEFAULT 100, fatigue INTEGER NOT NULL DEFAULT 0, rank_xp INTEGER NOT NULL DEFAULT 0, rank_level INTEGER NOT NULL DEFAULT 1, last_battle TEXT NOT NULL DEFAULT ''
+ );
+ CREATE TABLE IF NOT EXISTS army_navy (
+  telegram_id INTEGER NOT NULL, ship_key TEXT NOT NULL, amount INTEGER NOT NULL DEFAULT 0 CHECK(amount>=0),
+  PRIMARY KEY(telegram_id,ship_key)
+ );
+ CREATE TABLE IF NOT EXISTS army_prisoners (
+  telegram_id INTEGER PRIMARY KEY, amount INTEGER NOT NULL DEFAULT 0 CHECK(amount>=0)
+ );
+ CREATE TABLE IF NOT EXISTS army_mercenaries (
+  telegram_id INTEGER NOT NULL, unit_key TEXT NOT NULL, amount INTEGER NOT NULL DEFAULT 0 CHECK(amount>=0), expires_at INTEGER NOT NULL,
+  PRIMARY KEY(telegram_id,unit_key)
+ );`);
  initProductionSchema(db);
  const players=db.prepare('SELECT telegram_id,kingdom_name,population,gold,wood,stone,iron FROM players').all();
  const add=db.prepare('INSERT INTO settlements(telegram_id,name,type,is_capital,population,housing,gold) VALUES(?,?,\'city\',1,?,?,?)');
@@ -143,7 +168,11 @@ function armyTotals(db,id){
  const garrison=Object.fromEntries(UNIT_KEYS.map(k=>[k,0]));for(const r of rows)if(UNIT_KEYS.includes(r.unit_key))garrison[r.unit_key]=Number(r.amount||0);
  const total=Object.fromEntries(UNIT_KEYS.map(k=>[k,field[k]+garrison[k]]));
  const count=UNIT_KEYS.reduce((n,k)=>n+total[k],0);
- const hourlyGold=UNIT_KEYS.reduce((n,k)=>n+total[k]*UNIT_UPKEEP[k],0);
+ const advancedRows=db.prepare('SELECT unit_key,amount FROM army_units WHERE telegram_id=?').all(id);
+ const mercRows=db.prepare('SELECT unit_key,amount FROM army_mercenaries WHERE telegram_id=? AND expires_at>?').all(id,Math.floor(Date.now()/1000));
+ const advancedUpkeep=advancedRows.reduce((n,u)=>n+Number(u.amount||0)*(({spearmen:.12,crossbowmen:.16,heavy_infantry:.22,longbowmen:.18,horse_archers:.32,lancers:.35,royal_guards:.7,trebuchets:.5,battering_rams:.35})[u.unit_key]||.1),0);
+ const mercUpkeep=mercRows.reduce((n,u)=>n+Number(u.amount||0)*(({spearmen:.12,crossbowmen:.16,heavy_infantry:.22,longbowmen:.18,horse_archers:.32,lancers:.35,royal_guards:.7,trebuchets:.5,battering_rams:.35})[u.unit_key]||.1),0);
+ const hourlyGold=UNIT_KEYS.reduce((n,k)=>n+total[k]*UNIT_UPKEEP[k],0)+advancedUpkeep+mercUpkeep;
  const capital=db.prepare('SELECT id FROM settlements WHERE telegram_id=? AND is_capital=1').get(id);
  const settlements=db.prepare('SELECT id,name,type,is_capital,population FROM settlements WHERE telegram_id=? ORDER BY is_capital DESC,type,name').all(id).map(x=>{
   const units=db.prepare('SELECT unit_key,amount FROM settlement_garrisons WHERE settlement_id=?').all(x.id);
@@ -154,7 +183,7 @@ function armyTotals(db,id){
  const food=capital?db.prepare("SELECT resource_key,amount FROM settlement_resources WHERE settlement_id=? AND resource_key IN ('food','bread','wheat','carrot','potato','apples','milk','eggs','meat')").all(capital.id):[];
  const values={food:1,bread:1.25,wheat:.8,carrot:.7,potato:.9,apples:.7,milk:1.1,eggs:1.2,meat:1.5};
  const foodStock=food.reduce((n,r)=>n+Number(r.amount||0)*(values[r.resource_key]||1),0);
- const hourlyFood=count/10;
+ const hourlyFood=(count+advancedRows.reduce((n,u)=>n+Number(u.amount||0),0)+mercRows.reduce((n,u)=>n+Number(u.amount||0),0))/10;
  return {field,garrison,total,count,power:UNIT_KEYS.reduce((n,k)=>n+total[k]*UNIT_POWER[k],0),hourlyGold,hourlyFood,gold:Number(p.gold||0),settlements,capitalSettlementId:capital?.id||null,foodStock,foodHours:hourlyFood>0?foodStock/hourlyFood:null};
 }
 function tickArmyUpkeep(db,id,now=Math.floor(Date.now()/1000)){
@@ -198,5 +227,72 @@ app.post('/api/army/garrison',(req,res)=>{try{
  tickArmyUpkeep(db,id);
  res.json(armyTotals(db,id));
 }catch(e){res.status(400).json({error:e.message})}});
+// v0.11.0 advanced military systems. New mechanics use separate tables to preserve legacy troop data.
+ const ADV_UNITS={spearmen:{name:'Списники',power:2,cost:18,upkeep:.12},crossbowmen:{name:'Арбалетники',power:4,cost:32,upkeep:.16},heavy_infantry:{name:'Важка піхота',power:5,cost:45,upkeep:.22},longbowmen:{name:'Довгобійні лучники',power:5,cost:42,upkeep:.18},horse_archers:{name:'Кінні лучники',power:8,cost:70,upkeep:.32},lancers:{name:'Кінні списники',power:9,cost:85,upkeep:.35},royal_guards:{name:'Королівська гвардія',power:18,cost:180,upkeep:.7},trebuchets:{name:'Требушети',power:25,cost:260,upkeep:.5},battering_rams:{name:'Тарани',power:14,cost:150,upkeep:.35}};
+ const ADV_TECHS={weaponry:{name:'Військова зброя',cost:180},armor:{name:'Захисні обладунки',cost:200},logistics:{name:'Військова логістика',cost:240},naval:{name:'Мореплавство',cost:300},siegecraft:{name:'Облогова справа',cost:280}};
+ const FORMATIONS={balanced:{name:'Збалансований стрій',attack:1,defense:1},shield_wall:{name:'Стіна щитів',attack:.9,defense:1.25},wedge:{name:'Клин',attack:1.25,defense:.85},archer_line:{name:'Лінія стрільців',attack:1.15,defense:.9},skirmish:{name:'Розсипний стрій',attack:1.05,defense:1.05}};
+ const SHIPS={transport:{name:'Транспортне судно',cost:220,capacity:100},warship:{name:'Бойовий корабель',cost:420,capacity:0},galley:{name:'Галера',cost:650,capacity:0}};
+ function ensureArmyState(id){db.prepare('INSERT OR IGNORE INTO army_state(telegram_id) VALUES(?)').run(id);db.prepare('INSERT OR IGNORE INTO army_prisoners(telegram_id) VALUES(?)').run(id);}
+ function advancedArmy(id){
+  ensureArmyState(id); const now=Math.floor(Date.now()/1000);
+  db.prepare('DELETE FROM army_mercenaries WHERE telegram_id=? AND expires_at<=?').run(id,now);
+  const units=db.prepare('SELECT unit_key,amount,level,xp FROM army_units WHERE telegram_id=?').all(id).map(x=>({...x,...ADV_UNITS[x.unit_key]}));
+  const technologies=db.prepare('SELECT tech_key,level FROM army_technologies WHERE telegram_id=?').all(id);
+  const commanders=db.prepare('SELECT id,name,level,xp,trait FROM army_commanders WHERE telegram_id=? ORDER BY level DESC,id').all(id);
+  const ships=db.prepare('SELECT ship_key,amount FROM army_navy WHERE telegram_id=?').all(id).map(x=>({...x,...SHIPS[x.ship_key]}));
+  const mercenaries=db.prepare('SELECT unit_key,amount,expires_at FROM army_mercenaries WHERE telegram_id=? AND expires_at>?').all(id,now).map(x=>({...x,name:ADV_UNITS[x.unit_key]?.name||x.unit_key}));
+  const state=db.prepare('SELECT * FROM army_state WHERE telegram_id=?').get(id);const prisoners=Number(db.prepare('SELECT amount FROM army_prisoners WHERE telegram_id=?').get(id)?.amount||0);
+  const legacy=db.prepare('SELECT swordsmen,archers,shieldmen,cavalry,knights,gold FROM players WHERE telegram_id=?').get(id);
+  const legacyCount=['swordsmen','archers','shieldmen','cavalry','knights'].reduce((n,k)=>n+Number(legacy?.[k]||0),0);
+  const advancedCount=units.reduce((n,u)=>n+Number(u.amount),0), mercCount=mercenaries.reduce((n,u)=>n+Number(u.amount),0);
+  const techBonus=technologies.reduce((n,t)=>n+t.level,0)*.04;
+  const commanderBonus=commanders.length?Math.min(.25,Math.max(...commanders.map(c=>c.level))*.025):0;
+  const rawPower=armyTotals(db,id)?.power||0;
+  const extraPower=units.reduce((n,u)=>n+u.amount*u.power*(1+(u.level-1)*.15),0)+mercenaries.reduce((n,u)=>n+u.amount*(ADV_UNITS[u.unit_key]?.power||1),0);
+  const formation=FORMATIONS[state.formation]||FORMATIONS.balanced;
+  const effectivePower=Math.floor((rawPower+extraPower)*(1+techBonus+commanderBonus)*(state.morale/100)*(1-state.fatigue/200)*formation.attack);
+  return {units,technologies:ADV_TECHS,researched:technologies,commanders,ships,shipCatalog:SHIPS,mercenaries,prisoners,state,formationCatalog:FORMATIONS,legacyCount,advancedCount,mercCount,totalCount:legacyCount+advancedCount+mercCount,rawPower,extraPower,effectivePower,techBonus,commanderBonus,rankName:['Зброєносець','Вояк','Сержант','Капітан','Маршал','Великий маршал'][Math.min(5,state.rank_level-1)]};
+ }
+ app.get('/api/army/advanced',(req,res)=>{try{const id=getUserId(req);if(!db.prepare('SELECT 1 FROM players WHERE telegram_id=?').get(id))return res.status(400).json({error:'Немає королівства'});tickArmyUpkeep(db,id);res.json(advancedArmy(id));}catch(e){res.status(400).json({error:e.message})}});
+ app.post('/api/army/advanced/action',(req,res)=>{try{
+  const id=getUserId(req),action=String(req.body.action||''),key=String(req.body.key||''),p=db.prepare('SELECT * FROM players WHERE telegram_id=?').get(id);if(!p)return res.status(400).json({error:'Немає королівства'});ensureArmyState(id);
+  const state=db.prepare('SELECT * FROM army_state WHERE telegram_id=?').get(id);const now=Math.floor(Date.now()/1000);
+  const pay=(cost)=>{const cur=db.prepare('SELECT gold FROM players WHERE telegram_id=?').get(id);if(Number(cur.gold||0)<cost)throw Error(`Потрібно ${cost} золота.`);db.prepare('UPDATE players SET gold=gold-? WHERE telegram_id=?').run(cost,id)};
+  if(action==='recruit'){
+   const u=ADV_UNITS[key],amount=Math.max(1,Math.min(100,Math.floor(Number(req.body.amount)||1)));if(!u)throw Error('Невідомий тип війська.');pay(u.cost*amount);db.prepare('INSERT INTO army_units(telegram_id,unit_key,amount) VALUES(?,?,?) ON CONFLICT(telegram_id,unit_key) DO UPDATE SET amount=amount+excluded.amount').run(id,key,amount);
+  }else if(action==='upgrade'){
+   const u=ADV_UNITS[key],row=db.prepare('SELECT * FROM army_units WHERE telegram_id=? AND unit_key=?').get(id,key);if(!u||!row||row.amount<1)throw Error('Спочатку найми цей тип війська.');if(row.level>=5)throw Error('Досягнуто максимального рівня 5.');pay(u.cost*(row.level+1)*2);db.prepare('UPDATE army_units SET level=level+1,xp=xp+25 WHERE telegram_id=? AND unit_key=?').run(id,key);
+  }else if(action==='technology'){
+   const t=ADV_TECHS[key];if(!t)throw Error('Невідома технологія.');const row=db.prepare('SELECT level FROM army_technologies WHERE telegram_id=? AND tech_key=?').get(id,key),level=Number(row?.level||0);if(level>=5)throw Error('Технологію вже розвинено до рівня 5.');pay(t.cost*(level+1));db.prepare('INSERT INTO army_technologies(telegram_id,tech_key,level) VALUES(?,?,1) ON CONFLICT(telegram_id,tech_key) DO UPDATE SET level=level+1').run(id,key);
+  }else if(action==='formation'){
+   if(!FORMATIONS[key])throw Error('Невідома формація.');db.prepare('UPDATE army_state SET formation=? WHERE telegram_id=?').run(key,id);
+  }else if(action==='commander'){
+   const count=db.prepare('SELECT COUNT(*) n FROM army_commanders WHERE telegram_id=?').get(id).n;if(count>=3)throw Error('Можна мати максимум 3 командирів.');pay(350+count*250);const names=['Роланд','Едмунд','Альдрік','Матильда','Бернард','Ізольда','Годфрід'];const name=names[(id+count+now)%names.length];const traits=['Тактик','Захисник','Полководець','Розвідник'];db.prepare('INSERT INTO army_commanders(telegram_id,name,trait) VALUES(?,?,?)').run(id,name,traits[(now+count)%traits.length]);
+  }else if(action==='commander_train'){
+   const cid=Math.floor(Number(req.body.id));const c=db.prepare('SELECT * FROM army_commanders WHERE id=? AND telegram_id=?').get(cid,id);if(!c)throw Error('Командира не знайдено.');if(c.level>=10)throw Error('Максимальний рівень командира — 10.');pay(c.level*180);db.prepare('UPDATE army_commanders SET level=level+1,xp=xp+100 WHERE id=?').run(cid);
+  }else if(action==='mercenary'){
+   const u=ADV_UNITS[key],amount=Math.max(1,Math.min(20,Math.floor(Number(req.body.amount)||1)));if(!u)throw Error('Невідомий загін найманців.');pay(u.cost*amount*2);db.prepare('INSERT INTO army_mercenaries(telegram_id,unit_key,amount,expires_at) VALUES(?,?,?,?) ON CONFLICT(telegram_id,unit_key) DO UPDATE SET amount=amount+excluded.amount,expires_at=MAX(expires_at,excluded.expires_at)').run(id,key,amount,now+86400);
+  }else if(action==='ship'){
+   const ship=SHIPS[key],amount=Math.max(1,Math.min(10,Math.floor(Number(req.body.amount)||1)));if(!ship)throw Error('Невідомий корабель.');pay(ship.cost*amount);db.prepare('INSERT INTO army_navy(telegram_id,ship_key,amount) VALUES(?,?,?) ON CONFLICT(telegram_id,ship_key) DO UPDATE SET amount=amount+excluded.amount').run(id,key,amount);
+  }else if(action==='rest'){
+   db.prepare('UPDATE army_state SET morale=MIN(100,morale+25),fatigue=MAX(0,fatigue-35) WHERE telegram_id=?').run(id);
+  }else if(action==='expedition'||action==='siege'){
+   const a=advancedArmy(id);if(a.totalCount<5)throw Error('Потрібно щонайменше 5 воїнів для походу.');if(state.fatigue>=95)throw Error('Військо надто втомлене. Дай йому відпочити.');
+   const siege=action==='siege';if(siege&&!(a.units.some(u=>['trebuchets','battering_rams'].includes(u.unit_key)&&u.amount>0)))throw Error('Для облоги потрібні тарани або требушети.');
+   const enemy=Math.max(10,Math.floor(a.effectivePower*(siege?(.8+((now%31)/100)):(.55+((now%55)/100)))));const own=Math.max(1,a.effectivePower);const win=own>=enemy;const ratio=Math.min(1,enemy/own);let loss=Math.max(1,Math.floor(a.totalCount*(win?.04:.16)*ratio));loss=Math.min(loss,a.totalCount);
+   // Apply losses first to temporary mercenaries, then advanced units, then legacy field army.
+   let remaining=loss;for(const m of db.prepare('SELECT * FROM army_mercenaries WHERE telegram_id=? ORDER BY expires_at').all(id)){if(remaining<=0)break;const take=Math.min(remaining,m.amount);db.prepare('UPDATE army_mercenaries SET amount=amount-? WHERE telegram_id=? AND unit_key=?').run(take,id,m.unit_key);remaining-=take;}
+   for(const u of db.prepare('SELECT * FROM army_units WHERE telegram_id=? ORDER BY unit_key').all(id)){if(remaining<=0)break;const take=Math.min(remaining,u.amount);db.prepare('UPDATE army_units SET amount=amount-? WHERE telegram_id=? AND unit_key=?').run(take,id,u.unit_key);remaining-=take;}
+   for(const k of ['swordsmen','archers','shieldmen','cavalry','knights']){if(remaining<=0)break;const n=Number(db.prepare(`SELECT ${k} n FROM players WHERE telegram_id=?`).get(id).n||0),take=Math.min(remaining,n);if(take){db.prepare(`UPDATE players SET ${k}=${k}-? WHERE telegram_id=?`).run(take,id);remaining-=take;}}
+   const loot=win?Math.floor(80+a.totalCount*7+(siege?250:0)):Math.floor(a.totalCount*2);if(loot)db.prepare('UPDATE players SET gold=gold+? WHERE telegram_id=?').run(loot,id);
+   const captured=win?Math.max(0,Math.floor(a.totalCount*(siege?.08:.04))):0;if(captured)db.prepare('UPDATE army_prisoners SET amount=amount+? WHERE telegram_id=?').run(captured,id);
+   const xp=win?100:35;const morale=Math.max(10,Math.min(100,state.morale+(win?8:-18)));const fatigue=Math.min(100,state.fatigue+(siege?35:22));const rankXp=state.rank_xp+xp;const rankLevel=Math.min(6,1+Math.floor(rankXp/250));
+   db.prepare('UPDATE army_state SET morale=?,fatigue=?,rank_xp=?,rank_level=?,last_battle=? WHERE telegram_id=?').run(morale,fatigue,rankXp,rankLevel,`${siege?'Облога':'Похід'}: ${win?'перемога':'відступ'}, здобич ${loot} золота`,id);
+   db.prepare('UPDATE players SET xp=xp+? WHERE telegram_id=?').run(Math.floor(xp/5),id);
+  }else if(action==='ransom'){
+   const prisoners=Number(db.prepare('SELECT amount FROM army_prisoners WHERE telegram_id=?').get(id)?.amount||0);if(prisoners<1)throw Error('Полонених немає.');const ransom=prisoners*35;db.prepare('UPDATE army_prisoners SET amount=0 WHERE telegram_id=?').run(id);db.prepare('UPDATE players SET gold=gold+? WHERE telegram_id=?').run(ransom,id);
+  }else throw Error('Невідома військова дія.');
+  res.json({ok:true,army:advancedArmy(id)});
+ }catch(e){res.status(400).json({error:e.message})}});
 }
 module.exports={initSettlements,installSettlementRoutes,listSettlements,tickSettlements};
