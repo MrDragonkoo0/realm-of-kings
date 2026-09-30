@@ -47,7 +47,11 @@ function tickProduction(db, now=Math.floor(Date.now()/1000)) {
     const hours = Math.min(24, Math.max(0, Math.floor((now-last)/3600)));
     if (!hours) continue;
     const capacity = capacityFor(db,s.id);
-    const buildings = db.prepare("SELECT building_key,level FROM settlement_buildings WHERE settlement_id=? AND status='built' AND level>0 ORDER BY id").all(s.id);
+    const buildings = db.prepare("SELECT id,building_key,level FROM settlement_buildings WHERE settlement_id=? AND status='built' AND level>0 ORDER BY id").all(s.id);
+    const priorityRows=db.prepare('SELECT building_key,priority,updated_at FROM settlement_production_preferences WHERE settlement_id=?').all(s.id);
+    const priorityMap=new Map(priorityRows.map(x=>[x.building_key,x]));
+    const rank={high:0,medium:1,low:2};
+    buildings.sort((a,b)=>{const pa=priorityMap.get(a.building_key)||{priority:'medium',updated_at:0};const pb=priorityMap.get(b.building_key)||{priority:'medium',updated_at:0};return (rank[pa.priority]-rank[pb.priority])||(pa.updated_at-pb.updated_at)||(a.id-b.id)});
     for (const b of buildings) {
       const outputs = OUTPUTS[b.building_key]; if (!outputs) continue;
       const multiplier = 1 + 0.25 * Math.max(0,b.level-1);
