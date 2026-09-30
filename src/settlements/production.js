@@ -20,6 +20,10 @@ function initProductionSchema(db) {
   if (!cols.includes('last_production_at')) db.exec("ALTER TABLE settlements ADD COLUMN last_production_at INTEGER NOT NULL DEFAULT 0");
   if (!cols.includes('food_consumption_remainder')) db.exec('ALTER TABLE settlements ADD COLUMN food_consumption_remainder REAL NOT NULL DEFAULT 0');
   db.exec("UPDATE settlements SET last_production_at=strftime('%s','now') WHERE last_production_at=0");
+  db.exec(`CREATE TABLE IF NOT EXISTS settlement_building_workers (building_id INTEGER PRIMARY KEY, settlement_id INTEGER NOT NULL, workers INTEGER NOT NULL DEFAULT 0 CHECK(workers>=0), wage_debt INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(building_id) REFERENCES settlement_buildings(id) ON DELETE CASCADE, FOREIGN KEY(settlement_id) REFERENCES settlements(id) ON DELETE CASCADE)`);
+  db.exec("CREATE INDEX IF NOT EXISTS idx_building_workers_settlement ON settlement_building_workers(settlement_id)");
+  // Existing production buildings receive two workers once, preserving the established economy.
+  db.exec(`INSERT OR IGNORE INTO settlement_building_workers(building_id,settlement_id,workers) SELECT b.id,b.settlement_id,CASE WHEN b.status='built' AND b.level>0 AND b.building_key IN ('logging_camp','stone_quarry') THEN 2 ELSE 0 END FROM settlement_buildings b`);
 }
 function capacityFor(db, settlementId) {
   const s=db.prepare('SELECT warehouse_capacity FROM settlements WHERE id=?').get(settlementId);
@@ -53,7 +57,7 @@ function tickProduction(db,now=Math.floor(Date.now()/1000)){
     const last=s.last_production_at||now,hours=Math.min(24,Math.max(0,Math.floor((now-last)/3600)));
     if(!hours)continue;
     const capacity=capacityFor(db,s.id);
-    const buildings=db.prepare("SELECT id,building_key,level FROM settlement_buildings WHERE settlement_id=? AND status='built' AND level>0 ORDER BY id").all(s.id);
+    const buildings=db.prepare("SELECT b.id,b.building_key,b.level,COALESCE(w.workers,0) workers,COALESCE(w.wage_debt,0) wage_debt FROM settlement_buildings b LEFT JOIN settlement_building_workers w ON w.building_id=b.id WHERE b.settlement_id=? AND b.status='built' AND b.level>0 ORDER BY b.id").all(s.id);
     const priorityRows=db.prepare('SELECT building_key,priority,updated_at FROM settlement_production_preferences WHERE settlement_id=?').all(s.id);
     const priorityMap=new Map(priorityRows.map(x=>[x.building_key,x]));
     const rank={high:0,medium:1,low:2};
@@ -61,9 +65,10 @@ function tickProduction(db,now=Math.floor(Date.now()/1000)){
     let remainder=Number(s.food_consumption_remainder||0),totalConsumed=0,totalShortage=0;
     // Process each offline/online hour in sequence so food shortages affect that hour's output.
     for(let hour=0;hour<hours;hour++){
+      for(const b of buildings){ if(!b.workers) continue; const dueWage=b.workers; const player=db.prepare('SELECT gold FROM players WHERE telegram_id=?').get(s.telegram_id); let treasury=Math.max(0,Number(player?.gold||0)); if(treasury>=dueWage){db.prepare('UPDATE players SET gold=gold-? WHERE telegram_id=?').run(dueWage,s.telegram_id);treasury-=dueWage;if(b.wage_debt>0&&treasury>=b.wage_debt){db.prepare('UPDATE players SET gold=gold-? WHERE telegram_id=?').run(b.wage_debt,s.telegram_id);b.wage_debt=0;db.prepare('UPDATE settlement_building_workers SET wage_debt=0 WHERE building_id=?').run(b.id);}}else{const paid=treasury;if(paid>0)db.prepare('UPDATE players SET gold=gold-? WHERE telegram_id=?').run(paid,s.telegram_id);b.wage_debt+=dueWage-paid;db.prepare('UPDATE settlement_building_workers SET wage_debt=? WHERE building_id=?').run(b.wage_debt,b.id);} }
       const stockBefore=foodStock(db,s.id),populationRate=Math.max(0,Number(s.population||0)/100),stockHours=populationRate>0?stockBefore/populationRate:(stockBefore>0?Infinity:0);
       const productivity=stockBefore<=0?0.5:(stockHours<12?0.75:1);
-      for(const b of buildings){const outputs=OUTPUTS[b.building_key];if(!outputs)continue;const mult=1+0.25*Math.max(0,b.level-1);for(const [resource,rate] of Object.entries(outputs))addResource(db,s.id,resource,Math.floor(rate*mult*productivity),capacity);}
+      for(const b of buildings){const outputs=OUTPUTS[b.building_key];if(!outputs||b.workers<=0)continue;const workerMult=(b.workers/2)*(b.wage_debt>=b.workers*48?0:b.wage_debt>=b.workers*12?0.75:1);const mult=(1+0.25*Math.max(0,b.level-1))*workerMult;for(const [resource,rate] of Object.entries(outputs))addResource(db,s.id,resource,Math.floor(rate*mult*productivity),capacity);}
       remainder+=Math.max(0,Number(s.population||0)/100);
       const due=Math.floor(remainder);
       if(due>0){const result=consumeFood(db,s.id,due);totalConsumed+=result.consumed;totalShortage+=result.shortage;remainder-=due;}
