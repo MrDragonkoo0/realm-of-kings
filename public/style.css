@@ -360,3 +360,6 @@ body{padding:0 0 calc(76px + env(safe-area-inset-bottom));background:radial-grad
   #game .asset-home-grid .home-asset-button .menu-card-icon { flex-basis: 30px !important; width: 30px !important; font-size: 22px !important; }
   #game .asset-home-grid .home-asset-button .menu-card-label { font-size: 13px !important; }
 }
+
+/* v0.10.9 army garrison controls */
+.garrison-row{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;margin:8px 0;padding-top:8px;border-top:1px solid #4f462f}.garrison-row span{grid-column:1/-1;font-size:13px;color:#d6dce5}.garrison-row input{min-width:0;width:66px;background:#0b111a;color:#fff;border:1px solid #76603a;border-radius:6px;padding:8px}.garrison-row button{padding:8px 10px;font-size:12px}@media(max-width:370px){.garrison-row{gap:4px}.garrison-row button{padding:7px 6px;font-size:11px}}
