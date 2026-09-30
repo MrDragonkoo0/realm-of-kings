@@ -72,8 +72,8 @@ function tickSettlements(db, now=Math.floor(Date.now()/1000)){
  // Finish timed construction and upgrades when the player returns or opens settlements.
  const finished=db.prepare("SELECT * FROM settlement_buildings WHERE status IN ('building','upgrading') AND finish_at IS NOT NULL AND finish_at<=?").all(now);
  for(const b of finished){if(b.status==='upgrading') db.prepare("UPDATE settlement_buildings SET level=COALESCE(target_level,level+1),target_level=NULL,status='built',finish_at=NULL WHERE id=?").run(b.id); else db.prepare("UPDATE settlement_buildings SET status='built',finish_at=NULL WHERE id=?").run(b.id);}
- const due=db.prepare('SELECT * FROM settlements WHERE last_growth_at<=?').all(now-21600);
- for(const s of due){const housed=s.population<s.housing;const fed=foodStock(db,s.id)>0;if(housed&&fed){db.prepare('UPDATE settlements SET population=population+1,last_growth_at=? WHERE id=?').run(now,s.id);}else db.prepare('UPDATE settlements SET last_growth_at=? WHERE id=?').run(now,s.id);}
+ const due=db.prepare('SELECT * FROM settlements WHERE last_growth_at<=?').all(now-18000);
+ for(const s of due){const housed=s.population<s.housing;const metrics=foodMetrics(db,s);const fed=metrics.foodStock>0;const interval=metrics.foodStatus==='Збалансований раціон'?18000:21600;if(now-(s.last_growth_at||0)<interval)continue;if(housed&&fed)db.prepare('UPDATE settlements SET population=population+1,last_growth_at=? WHERE id=?').run(now,s.id);else db.prepare('UPDATE settlements SET last_growth_at=? WHERE id=?').run(now,s.id); }
  db.prepare("UPDATE settlements SET type='city' WHERE type='village' AND population>=10000").run();
 }
 function listSettlements(db,id){

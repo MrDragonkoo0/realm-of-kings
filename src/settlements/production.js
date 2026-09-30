@@ -14,7 +14,8 @@ const RESOURCE_NAMES = {
   planks:'Дошки',metal:'Метал',brick:'Цегла',glass:'Скло'
 };
 // Each unit of these resources counts as one food ration for consumption.
-const FOOD_KEYS = ['food','bread','wheat','carrot','potato','apples','milk','eggs','meat'];
+const FOOD_VALUES = {food:1,bread:1.25,wheat:0.8,carrot:0.7,potato:0.9,apples:0.7,milk:1.1,eggs:1.2,meat:1.5};
+const FOOD_KEYS = Object.keys(FOOD_VALUES);
 function initProductionSchema(db) {
   const cols = db.prepare('PRAGMA table_info(settlements)').all().map(x=>x.name);
   if (!cols.includes('last_production_at')) db.exec("ALTER TABLE settlements ADD COLUMN last_production_at INTEGER NOT NULL DEFAULT 0");
@@ -32,7 +33,7 @@ function capacityFor(db, settlementId) {
 }
 function inventoryTotal(db,sid){return db.prepare('SELECT COALESCE(SUM(amount),0) n FROM settlement_resources WHERE settlement_id=?').get(sid).n;}
 function resourceAmount(db,sid,key){return Number(db.prepare('SELECT amount FROM settlement_resources WHERE settlement_id=? AND resource_key=?').get(sid,key)?.amount||0);}
-function foodStock(db,sid){return db.prepare(`SELECT COALESCE(SUM(amount),0) n FROM settlement_resources WHERE settlement_id=? AND resource_key IN (${FOOD_KEYS.map(()=>'?').join(',')})`).get(sid,...FOOD_KEYS).n;}
+function foodStock(db,sid){const rows=db.prepare(`SELECT resource_key,amount FROM settlement_resources WHERE settlement_id=? AND resource_key IN (${FOOD_KEYS.map(()=>'?').join(',')})`).all(sid,...FOOD_KEYS);return rows.reduce((sum,row)=>sum+Number(row.amount||0)*(FOOD_VALUES[row.resource_key]||1),0);}
 function addResource(db,sid,key,amount,capacity){
   if(amount<=0)return 0;
   const free=Math.max(0,capacity-inventoryTotal(db,sid)),accepted=Math.min(free,amount);
@@ -41,17 +42,20 @@ function addResource(db,sid,key,amount,capacity){
 }
 function consumeFood(db,sid,needed){
   let remaining=needed,consumed=0;
-  // Consume generic rations first, then varied foods. Never make a stock negative.
-  for(const key of FOOD_KEYS){if(remaining<=0)break;const have=resourceAmount(db,sid,key);if(have<=0)continue;const take=Math.min(have,remaining);db.prepare('UPDATE settlement_resources SET amount=amount-? WHERE settlement_id=? AND resource_key=?').run(take,sid,key);remaining-=take;consumed+=take;}
+  const order=[...FOOD_KEYS].sort((a,b)=>(FOOD_VALUES[a]||1)-(FOOD_VALUES[b]||1));
+  for(const key of order){if(remaining<=0)break;const have=resourceAmount(db,sid,key),value=FOOD_VALUES[key]||1;if(have<=0)continue;const take=Math.min(have,remaining/value);db.prepare('UPDATE settlement_resources SET amount=MAX(0,amount-?) WHERE settlement_id=? AND resource_key=?').run(take,sid,key);const nutrition=take*value;remaining-=nutrition;consumed+=nutrition;}
   return {consumed,shortage:Math.max(0,remaining)};
 }
 function foodMetrics(db,s){
   const total=foodStock(db,s.id),rate=Math.max(0,Number(s.population||0)/100),hours=rate>0?total/rate:(total>0?Infinity:0);
-  const distinct=db.prepare(`SELECT COUNT(*) n FROM settlement_resources WHERE settlement_id=? AND resource_key IN (${FOOD_KEYS.filter(k=>k!=='food').map(()=>'?').join(',')}) AND amount>0`).get(s.id,...FOOD_KEYS.filter(k=>k!=='food')).n;
-  let penalty=0,status='Немає їжі';
-  if(total>0){if(hours<12) {penalty=0.25;status='Критично мало';}else if(hours<24){status='Мало запасів';}else if(distinct>=5){status='Різноманітне харчування';}else status='Запаси є';}
-  return {foodStock:Math.floor(total),foodConsumptionPerHour:rate,foodHoursRemaining:Number.isFinite(hours)?Math.round(hours*10)/10:null,foodStatus:status,foodDiversity:distinct,foodProductivityPenalty:penalty,foodProductivityMultiplier:total<=0?0.5:1-penalty};
+  const diverseKeys=FOOD_KEYS.filter(k=>k!=='food');
+  const distinct=db.prepare(`SELECT COUNT(*) n FROM settlement_resources WHERE settlement_id=? AND resource_key IN (${diverseKeys.map(()=>'?').join(',')}) AND amount>0`).get(s.id,...diverseKeys).n;
+  let penalty=0,status='Немає їжі',quality=1;
+  if(total>0){if(hours<12){penalty=0.25;status='Критично мало';}else if(hours<24){status='Мало запасів';}else if(distinct>=5){status='Збалансований раціон';quality=1.05;}else if(distinct>=3){status='Достатньо різноманітний раціон';}else status='Одноманітний раціон';}
+  const shortageMultiplier=total<=0?0.5:1-penalty;
+  return {foodStock:Math.floor(total*10)/10,foodConsumptionPerHour:rate,foodHoursRemaining:Number.isFinite(hours)?Math.round(hours*10)/10:null,foodStatus:status,foodDiversity:distinct,foodQualityMultiplier:quality,foodProductivityPenalty:penalty,foodProductivityMultiplier:shortageMultiplier*quality,foodValues:FOOD_VALUES};
 }
+
 function tickProduction(db,now=Math.floor(Date.now()/1000)){
   for(const s of db.prepare('SELECT * FROM settlements').all()){
     const last=s.last_production_at||now,hours=Math.min(24,Math.max(0,Math.floor((now-last)/3600)));
