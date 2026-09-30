@@ -1,2 +1,1 @@
-Realm of Kings v0.10.0 — Structure Mode fix
-PNG textures are preserved in the archive but not required for management buttons.
+0.10.0-structure-economy

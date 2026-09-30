@@ -28,3 +28,6 @@
 - SQLite-міграції адитивні: створюються нові таблиці та відсутні колонки; старі записи гравців не очищуються.
 - Збережено `DB_PATH=/data/rok.db`, `BOT_TOKEN` і Railway Volume `/data`.
 - Потрібен Node.js >= 22.5 та встановлення залежностей через `npm install`.
+
+
+Structure Mode: PNG-based menu and navigation textures are temporarily replaced with CSS buttons and icon glyphs. Economy module and routes are retained.
