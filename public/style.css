@@ -316,3 +316,47 @@ body{padding:0 0 calc(76px + env(safe-area-inset-bottom));background:radial-grad
 #bottomNav button{min-height:48px}
 #bottomNav .nav-glyph{display:grid;place-items:center;width:100%;height:42px;font-size:27px;line-height:1;color:#d9b66c}
 #bottomNav button.active .nav-glyph{color:#f3d17a;text-shadow:0 0 9px #d6a84188}
+
+
+/* v0.10.0 FIX: show CSS fallback buttons when PNG textures are disabled.
+   This intentionally overrides legacy texture rules from v0.9.x. */
+#game .asset-home-grid .home-asset-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  min-height: 64px !important;
+  height: auto !important;
+  aspect-ratio: auto !important;
+  padding: 10px 12px !important;
+  border: 1px solid #8e6d36 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg,#1b2a3b 0%,#0d1520 78%) !important;
+  box-shadow: inset 0 1px 0 #ffffff12,0 4px 10px #0004 !important;
+  color: #f5e8cf !important;
+  text-align: left !important;
+  overflow: visible !important;
+}
+#game .asset-home-grid .home-asset-button .menu-card-icon {
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 25px !important;
+  line-height: 1 !important;
+}
+#game .asset-home-grid .home-asset-button .menu-card-label {
+  display: block !important;
+  position: relative !important;
+  color: #f5e8cf !important;
+  font: 600 14px/1.2 Georgia,serif !important;
+  overflow-wrap: anywhere !important;
+  text-shadow: 0 1px 2px #000 !important;
+}
+#game .asset-home-grid .home-asset-button::after { content: none !important; }
+@media (max-width: 390px) {
+  #game .asset-home-grid .home-asset-button { min-height: 60px !important; gap: 7px !important; padding: 8px !important; }
+  #game .asset-home-grid .home-asset-button .menu-card-icon { flex-basis: 30px !important; width: 30px !important; font-size: 22px !important; }
+  #game .asset-home-grid .home-asset-button .menu-card-label { font-size: 13px !important; }
+}
