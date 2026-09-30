@@ -1,4 +1,2 @@
-Realm of Kings v0.10.0
-Economy and automatic production update.
-Includes worker assignments, hourly production and offline accumulation, food production/consumption, wage debt penalties, warehouse capacity and priorities, timed construction/upgrades with 50% cancellation refunds, production notifications/history/archive/statistics, and TXT/CSV export quota.
-SQLite changes are additive; existing kingdoms and resources are preserved. Keep Railway DB_PATH=/data/rok.db and the existing /data Volume.
+Realm of Kings v0.10.0 — Structure Mode fix
+PNG textures are preserved in the archive but not required for management buttons.
