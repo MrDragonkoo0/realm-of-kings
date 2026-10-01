@@ -437,3 +437,4 @@ body{padding:0 0 calc(76px + env(safe-area-inset-bottom));background:radial-grad
 .army-unit-actions{width:100%;margin-left:0!important;padding-left:0;flex-direction:row;flex-wrap:wrap}
 .army-unit-actions button{flex:1 1 100px}
 @media(max-width:390px){.army-screen{padding-left:8px;padding-right:8px}.army-tabs{gap:5px}.army-tabs button{font-size:11px;min-height:40px}.army-header{align-items:flex-start}.army-overview>div{padding:9px 7px}.army-summary-grid>div{padding:8px}}
+.army-screen .battle-log{white-space:pre-wrap;overflow-wrap:anywhere;background:#101923;border-radius:8px;padding:10px;color:#e4eaf0;font-size:12px;line-height:1.5}
